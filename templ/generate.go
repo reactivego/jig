@@ -47,8 +47,8 @@ func generateApplies(tpls *templatemanager, signature string, next func(*apply))
 		// we're generating for signature, so mark it as known to break any reference cycles.
 		known[signature] = struct{}{}
 
-		// tpl is the template that matches signature e.g. "ObservableInt32 MapFloat64" and types
-		// contain the types in the signature e.g. ["Int32","Float64"]
+		// Given a type signature e.g. "ObservableInt32 MapFloat64" then tpl is the template that matches that.
+		// The types string slice contain the types in the signature e.g. ["Int32","Float64"]
 		tpl, types := tpls.find(signature)
 		if tpl != nil {
 			if len(tpl.Vars) != len(types) {
