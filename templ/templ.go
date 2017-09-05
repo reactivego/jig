@@ -122,7 +122,9 @@ func (templates sortedtemplates) Len() int {
 }
 
 func (templates sortedtemplates) Less(i, j int) bool {
-	return len(templates[i].Name) < len(templates[j].Name)
+	// Templates with more variables are considered less.
+	return len(templates[i].Vars) > len(templates[j].Vars) &&
+		len(templates[i].Name) < len(templates[j].Name)
 }
 
 func (templates sortedtemplates) Swap(i, j int) {
