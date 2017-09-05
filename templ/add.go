@@ -63,7 +63,7 @@ func (tpls *templatemanager) Add(t Template, source string) error {
 	// Then compile this and assign to t.signature used for matching to missing type signatures.
 	sig := t.Name
 	for _, tplvar := range t.Vars {
-		sig = strings.Replace(sig, fmt.Sprintf("<%s>", tplvar), "([[:word:]]+)", -1)
+		sig = strings.Replace(sig, fmt.Sprintf("<%s>", tplvar), "([[:word:]]*)", -1)
 	}
 	sig = fmt.Sprintf("^%s$", sig)
 	t.signature = regexp.MustCompile(sig)
@@ -80,6 +80,7 @@ func (tpls *templatemanager) Add(t Template, source string) error {
 
 // stdTypeMap contains a mapping from display type to real type.
 var stdTypeMap = map[string]string{
+	"":           "interface{}",
 	"Bool":       "bool",
 	"Byte":       "byte",
 	"Complex128": "complex128",
