@@ -21,11 +21,8 @@ type jig struct {
 	End    token.Pos
 	Source string
 
-	// supports contains the templates this one supports, can be converted
-	// into Needs on other templates. If it contains a single empty string
-	// then this templates is needed by all other templates.
-	// example: Observable<Foo> Concat, Observable<Foo> Merge
-	supports []string
+	// support template is added to Needs [] of every other jig.
+	support bool
 }
 
 func newJig(packageName string, cgroup *ast.CommentGroup) *jig {
@@ -33,6 +30,11 @@ func newJig(packageName string, cgroup *ast.CommentGroup) *jig {
 	jig.PackageName = packageName
 	jig.Pos = cgroup.End()
 	for _, comment := range cgroup.List {
+		if comment.Text == jigSupport {
+			jig.support = true
+			continue
+		}
+
 		kvmatch := reCommentPragma.FindStringSubmatch(comment.Text)
 		if len(kvmatch) == 3 {
 			switch kvmatch[1] {
@@ -47,18 +49,6 @@ func newJig(packageName string, cgroup *ast.CommentGroup) *jig {
 				embeds := strings.Split(kvmatch[2], ",")
 				for _, embed := range embeds {
 					jig.Embeds = append(jig.Embeds, strings.TrimSpace(embed))
-				}
-			case jigSupports:
-				supports := strings.Split(kvmatch[2], ",")
-				for _, support := range supports {
-					support = strings.TrimSpace(support)
-					// Handle supports * case.
-					if support == "*" {
-						jig.setSupports(supportsAll)
-						break
-					}
-					// Handle normal supports case.
-					jig.supports = append(jig.supports, support)
 				}
 			}
 		}
@@ -80,14 +70,6 @@ func (jig *jig) Close(pos token.Pos) {
 	if jig != nil {
 		jig.End = pos
 	}
-}
-
-func (jig *jig) Supports(value string) bool {
-	return len(jig.supports) == 1 && jig.supports[0] == ""
-}
-
-func (jig *jig) setSupports(value string) {
-	jig.supports = []string{value}
 }
 
 func (jig *jig) ContainsSourceRange(pos, end token.Pos) bool {

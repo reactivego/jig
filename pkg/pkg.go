@@ -39,6 +39,11 @@ type Package struct {
 
 	// typemap contains a mapping of display types e.g. Foo to real types e.g. foo
 	typemap map[string]string
+
+	// ignoreSupport when set to true will prevent support templates from being
+	// included in the generated source code. Support code is assumed to be provided
+	// in another way.
+	ignoreSupport bool
 }
 
 // NewPackage creates a package given a single directory where the source of

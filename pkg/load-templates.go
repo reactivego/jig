@@ -21,8 +21,8 @@ func (p *Package) LoadTemplates(tplr templ.Templater) (messages []string, err er
 		if jigs == nil {
 			continue
 		}
-		// Convert supports declarations into Needs on the template mentioned in a jig's supports list.
-		p.transformSupportsIntoNeeds(jigs)
+		// Convert support declarations into Needs on the templates
+		p.transformSupportIntoNeeds(jigs)
 		// Now all jigs have been read, so we can now tell every jig to define their template.
 		err = p.defineTemplates(tplr, jigs)
 		if err != nil {
@@ -101,23 +101,22 @@ func (c sourceCollector) Visit(node ast.Node) ast.Visitor {
 	return nil
 }
 
-// transformSupportsIntoNeeds will convert supports declarations of a jig into Needs on the jigs mentioned
-// in that jig's supports list.
-func (p *Package) transformSupportsIntoNeeds(jigs []*jig) {
-	supports := make(map[string][]string)
+// transformSupportIntoNeeds will convert support declarations of a jig into Needs on the other jigs
+func (p *Package) transformSupportIntoNeeds(jigs []*jig) {
+	if p.ignoreSupport {
+		return
+	}
+	var supports []string
 	for _, jig := range jigs {
-		for _, support := range jig.supports {
-			supports[support] = append(supports[support], jig.Name)
+		if jig.support {
+			supports = append(supports, jig.Name)
 		}
 	}
 	for _, jig := range jigs {
-		// Add needs clauses only to jigs that are not there to support all other jigs.
-		if !jig.Supports(supportsAll) {
-			var all []string
-			all = append(all, supports[supportsAll]...)
-			all = append(all, supports[jig.Name]...)
-			jig.Needs = append(all, jig.Needs...)
+		if jig.support {
+			continue
 		}
+		jig.Needs = append(supports, jig.Needs...)
 	}
 }
 

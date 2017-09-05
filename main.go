@@ -72,6 +72,13 @@ func jigMain() int {
 			break
 		}
 
+		// Look in the files directly associated with the package for
+		// comment pragmas jig:file and jig:type.
+		messages := pkg.LoadGeneratePragmas()
+		if printedError(verbose, messages, nil) {
+			return 1
+		}
+
 		if tplr == nil {
 			// Look for our //jigs: comment pragmas and import
 			// any templates declared that way.
@@ -80,13 +87,6 @@ func jigMain() int {
 			if printedError(verbose, messages, err) {
 				return 1
 			}
-		}
-
-		// Look in the files directly associated with the package for
-		// comment pragmas jig:file and jig:type.
-		messages := pkg.LoadGeneratePragmas()
-		if printedError(verbose, messages, nil) {
-			return 1
 		}
 
 		// Implement missing language constructs.
