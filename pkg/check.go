@@ -14,7 +14,7 @@ func (p *Package) Check() ([]error, error) {
 
 	p.CreatePkgs = []loader.PkgSpec{p.PkgSpec()}
 
-	// Load the program, type checking it in the process.
+	// Load the program, type checking it in the process.§
 	prog, err := p.Load()
 	if err != nil {
 		return nil, err

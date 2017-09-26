@@ -1,13 +1,10 @@
 package pkg
 
 import (
-	"fmt"
 	"go/ast"
+	"go/build"
 	"go/parser"
-	"go/printer"
 	"go/types"
-	"io"
-	"os"
 	"text/template"
 
 	"golang.org/x/tools/go/loader"
@@ -41,14 +38,18 @@ type Package struct {
 	typemap map[string]string
 
 	// ignoreSupport when set to true will prevent support templates from being
-	// included in the generated source code. Support code is assumed to be provided
-	// in another way.
+	// included in the generated source code. Support code is assumed to be
+	// provided in another way. Support templates are templates explicitly
+	// marked as such (jig:support) and templates that are marked as needed by
+	// another template but that don't have template vars themselves.
 	ignoreSupport bool
 }
 
 // NewPackage creates a package given a single directory where the source of
 // the package lives.
 func NewPackage(dir string) *Package {
+	buildConfig := build.Default
+	buildConfig.CgoEnabled = false
 	return &Package{
 		Dir: dir,
 		Config: &loader.Config{
@@ -62,6 +63,7 @@ func NewPackage(dir string) *Package {
 			},
 			ParserMode:  parser.ParseComments,
 			AllowErrors: true,
+			Build:       &buildConfig,
 		},
 		generated: make(map[string]string),
 		fileset:   make(map[string]*ast.File),
@@ -95,44 +97,13 @@ func (p *Package) AddFile(file *ast.File) {
 	p.fileset[path] = file
 }
 
-// WriteFileset writes the set of files that contains generated source to disk.
-func (p *Package) WriteFileset(fileset map[*ast.File]struct{}) error {
-	var err error
-	for file := range fileset {
-		path := p.Filepath(file)
-
-		// create a file to write the new package content to.
-		f, err := os.Create(path)
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-
-		// actually write the package content out to file.
-		if e := p.WriteFile(f, file); e != nil {
-			err = e
-		}
+// GeneratedFileset returns a map containing the set of files
+// that have generated fragments in them.
+func (p *Package) GeneratedFileset() map[*ast.File]struct{} {
+	fileset := make(map[*ast.File]struct{})
+	for _, path := range p.generated {
+		file := p.fileset[path]
+		fileset[file] = struct{}{}
 	}
-	return err
-}
-
-// WriteFile will write the given file to the given output.
-func (p *Package) WriteFile(output io.Writer, file *ast.File) error {
-	return printer.Fprint(output, p.Fset, file)
-}
-
-// RemoveFileset will remove the passed set of files from the PkgSpec files slice.
-func (p *Package) RemoveFileset(fileset map[*ast.File]struct{}) (messages []string, err error) {
-	for path, file := range p.fileset {
-		_, present := fileset[file]
-		if present {
-			messages = append(messages, fmt.Sprintf("removing file %q", path))
-			// Remove physical files on disk.
-			if e := os.Remove(path); e != nil {
-				err = e
-			}
-			delete(p.fileset, path)
-		}
-	}
-	return messages, err
+	return fileset
 }

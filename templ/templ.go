@@ -102,31 +102,39 @@ func NewTemplater() Templater {
 type templatemanager struct {
 	// Templates contains the templates sorted from longest to shortest Template.Name length used
 	// by Templater.FindApply() to match type signatures to templates.
-	Templates sortedtemplates
+	Templates []*Template
 
 	// GoTemplates is the repository for defined go templates added via Templater.Parse()
 	GoTemplates *template.Template
 }
 
 func (tpls *templatemanager) Sort() {
-	sort.Sort(sort.Reverse(tpls.Templates))
+	sort.Sort(sort.Reverse(byNumVarsAndLength(tpls.Templates)))
 }
 
-// sortedtemplates is a slice of Template(s) that needs to be sortable on
-// Template.Name length. When comparing templates we need to prefer the
-// longer matches over shorter ones.
-type sortedtemplates []*Template
+// byNumVarsAndLength attaches sort methods to a []*template.Template instance.
+// It sorts first on the number of template variables from most to least number
+// of variables. Withing each tier sorts templates on length of template name,
+// from short to longest.
+type byNumVarsAndLength []*Template
 
-func (templates sortedtemplates) Len() int {
-	return len(templates)
+func (a byNumVarsAndLength) Len() int {
+	return len(a)
 }
 
-func (templates sortedtemplates) Less(i, j int) bool {
-	// Templates with more variables are considered less.
-	return len(templates[i].Vars) > len(templates[j].Vars) &&
-		len(templates[i].Name) < len(templates[j].Name)
+func (a byNumVarsAndLength) Less(i, j int) bool {
+	if len(a[i].Vars) > len(a[j].Vars) {
+		// Templates with more variables are considered less.
+		return true
+	}
+	if len(a[i].Vars) < len(a[j].Vars) {
+		// Templates with less variables are considered more
+		return false
+	}
+	// Equal number of variables, then compare length of template Name.
+	return len(a[i].Name) < len(a[j].Name)
 }
 
-func (templates sortedtemplates) Swap(i, j int) {
-	templates[i], templates[j] = templates[j], templates[i]
+func (a byNumVarsAndLength) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
 }

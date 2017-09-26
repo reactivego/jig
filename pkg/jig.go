@@ -3,13 +3,11 @@ package pkg
 import (
 	"go/ast"
 	"go/token"
-	"reactivego/jig/templ"
 	"regexp"
 	"strings"
-)
 
-// supportsAll is the constant used in supports to indicate it supports all other jigs.
-const supportsAll = ""
+	"github.com/reactivego/jig/templ"
+)
 
 // Extract template variables, matches will contain [["<Foo>" "Foo"] ["<Bar>" "Bar"]]
 var reTemplateVar = regexp.MustCompile("<([[:word:]]+)>")
@@ -48,7 +46,10 @@ func newJig(packageName string, cgroup *ast.CommentGroup) *jig {
 			case jigEmbeds:
 				embeds := strings.Split(kvmatch[2], ",")
 				for _, embed := range embeds {
-					jig.Embeds = append(jig.Embeds, strings.TrimSpace(embed))
+					embed = strings.TrimSpace(embed)
+					jig.Embeds = append(jig.Embeds, embed)
+					// If it embeds it, then it also needs it.
+					jig.Needs = append(jig.Needs, embed)
 				}
 			}
 		}

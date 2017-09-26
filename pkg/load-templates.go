@@ -6,8 +6,9 @@ import (
 	"go/ast"
 	"go/printer"
 	"go/token"
-	"reactivego/jig/templ"
 	"strings"
+
+	"github.com/reactivego/jig/templ"
 )
 
 // LoadTemplates is used to go through all the ast.File(s) in all the
@@ -21,14 +22,19 @@ func (p *Package) LoadTemplates(tplr templ.Templater) (messages []string, err er
 		if jigs == nil {
 			continue
 		}
-		// Convert support declarations into Needs on the templates
-		p.transformSupportIntoNeeds(jigs)
+		if !p.ignoreSupport {
+			// Convert support declarations into Needs on the templates
+			p.transformSupportIntoNeeds(jigs)
+		}
 		// Now all jigs have been read, so we can now tell every jig to define their template.
 		err = p.defineTemplates(tplr, jigs)
 		if err != nil {
 			return messages, err
 		}
 		messages = append(messages, fmt.Sprintf("found %d jig templates in package %q", len(jigs), pkgInfo.Pkg.Path()))
+		if p.ignoreSupport {
+			messages = append(messages, fmt.Sprint("ignoring all support only templates"))
+		}
 	}
 	tplr.Sort()
 	return messages, nil
@@ -52,7 +58,10 @@ func (p *Package) LoadTemplatesFromFile(file *ast.File) []*jig {
 			if strings.HasPrefix(comment.Text, jigTemplate) {
 				jig.Close(cgroup.Pos())
 				jig = newJig(file.Name.String(), cgroup)
-				jigs = append(jigs, jig)
+				jigHasSupportingRole := jig.support || len(jig.Vars) == 0
+				if !(p.ignoreSupport && jigHasSupportingRole) {
+					jigs = append(jigs, jig)
+				}
 				break
 			}
 		}
@@ -103,9 +112,6 @@ func (c sourceCollector) Visit(node ast.Node) ast.Visitor {
 
 // transformSupportIntoNeeds will convert support declarations of a jig into Needs on the other jigs
 func (p *Package) transformSupportIntoNeeds(jigs []*jig) {
-	if p.ignoreSupport {
-		return
-	}
 	var supports []string
 	for _, jig := range jigs {
 		if jig.support {

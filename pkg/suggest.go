@@ -14,6 +14,7 @@ func (Package) SuggestTypesToGenerate(errs []error) []string {
 		return nil
 	}
 
+	var sigs []string
 	sigmap := make(map[string]struct{})
 	for _, err := range errs {
 		errstr := err.Error()
@@ -21,15 +22,13 @@ func (Package) SuggestTypesToGenerate(errs []error) []string {
 			matches := exp.FindStringSubmatch(errstr)
 			if len(matches) == 5 || len(matches) == 6 {
 				signature := strings.Join(matches[4:], " ")
-				sigmap[signature] = struct{}{}
+				if _, present := sigmap[signature]; !present {
+					sigmap[signature] = struct{}{}
+					sigs = append(sigs, signature)
+				}
 				break
 			}
 		}
-	}
-
-	var sigs []string
-	for key := range sigmap {
-		sigs = append(sigs, key)
 	}
 	return sigs
 }

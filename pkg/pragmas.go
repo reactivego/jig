@@ -51,7 +51,7 @@ var reCommentPragma = regexp.MustCompile("^(//jig:[[:word:]]+)[[:space:]]+(.+)$"
 // identifiers. Whereas the real type is used in parameters and variable types.
 const jigType = "//jig:type"
 
-var reJigType = regexp.MustCompile("^//jig:type[[:space:]]+([[:word:]]+)[[:space:]]+([[:word:]]+)$")
+var reJigType = regexp.MustCompile("^//jig:type[[:space:]]+([[:word:]]+)[[:space:]]+([[:punct:][:word:]]+)$")
 
 // jigNoSupport comment pragma
-const jigNoSupport = "//jig:no-support"
+const jigNoSupport = "//jig:no-support-code-generation"

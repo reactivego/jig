@@ -7,7 +7,9 @@ import (
 
 func (tpls *templatemanager) GenerateCodeForType(pkg PackageWriter, signature string) (messages []string, err error) {
 	var applies []*apply
-	err = generateApplies(tpls, signature, func(a *apply) {
+	missing, err := generateApplies(tpls, signature, func(a *apply) (bool, error) {
+		return tpls.SkipSpecialize(pkg, a)
+	}, func(a *apply) {
 		applies = append(applies, a)
 	})
 	if err != nil {
@@ -18,6 +20,9 @@ func (tpls *templatemanager) GenerateCodeForType(pkg PackageWriter, signature st
 		if msg != "" {
 			if len(messages) == 0 {
 				messages = []string{fmt.Sprintf("generating %q", signature), "  " + msg}
+				for _, msg := range missing {
+					messages = append(messages, "  "+msg)
+				}
 			} else {
 				messages = append(messages, "  "+msg)
 			}
@@ -38,37 +43,43 @@ type apply struct {
 }
 
 // generateApplies will recurse down the needs tree of templates matching the signature
-func generateApplies(tpls *templatemanager, signature string, next func(*apply)) error {
+func generateApplies(tpls *templatemanager, signature string, skip func(*apply) (bool, error), next func(*apply)) ([]string, error) {
 	var (
 		known    = make(map[string]struct{})
-		generate func(signature string) error
+		generate func(string, []string) ([]string, error)
 	)
-	generate = func(signature string) error {
+	generate = func(signature string, parentTypes []string) (missing []string, err error) {
 		// we're generating for signature, so mark it as known to break any reference cycles.
 		known[signature] = struct{}{}
 
 		// Given a type signature e.g. "ObservableInt32 MapFloat64" then tpl is the template that matches that.
 		// The types string slice contain the types in the signature e.g. ["Int32","Float64"]
-		tpl, types := tpls.find(signature)
+		tpl, types := tpls.find(signature, parentTypes)
 		if tpl != nil {
 			if len(tpl.Vars) != len(types) {
-				return fmt.Errorf("signature %q does not match template %q", signature, tpl.Name)
+				return missing, fmt.Errorf("signature %q does not match template %q", signature, tpl.Name)
 			}
-			for _, need := range tpl.Needs {
-				// Convert need of the form e.g. Observable<Foo> into ObservableInt32 assuming Foo == "Int32"
-				for i, varname := range tpl.Vars {
-					need = strings.Replace(need, fmt.Sprintf("<%s>", varname), types[i], -1)
-				}
-				// Check if this need is known
-				if _, present := known[need]; !present {
-					err := generate(need)
-					if err != nil {
-						return err
+			application := &apply{tpl, types}
+			skip, err := skip(application)
+			if err == nil && !skip {
+				for _, need := range tpl.Needs {
+					// Convert need of the form e.g. Observable<Foo> into ObservableInt32 assuming Foo == "Int32"
+					for i, varname := range tpl.Vars {
+						need = strings.Replace(need, fmt.Sprintf("<%s>", varname), types[i], -1)
+					}
+
+					// Check if this need is known
+					if _, present := known[need]; !present {
+						msgs, err := generate(need, types)
+						missing = append(missing, msgs...)
+						if err != nil {
+							return missing, err
+						}
 					}
 				}
+				next(application)
 			}
-			next(&apply{tpl, types})
-			return nil
+			return missing, err
 		}
 
 		// When we get here we did not match the signature to any template.
@@ -79,10 +90,10 @@ func generateApplies(tpls *templatemanager, signature string, next func(*apply))
 		if fields := strings.Fields(signature); len(fields) == 2 {
 			name, method := fields[0], fields[1]
 			//  Lookup "ConnectableInt" by itself and see if embeds other types, yes "Observable<Foo>"
-			tpl, types := tpls.find(name)
+			tpl, types := tpls.find(name, parentTypes)
 			if tpl != nil && len(tpl.Embeds) > 0 {
 				if len(tpl.Vars) != len(types) {
-					return fmt.Errorf("signature %q does not match template %q", name, tpl.Name)
+					return missing, fmt.Errorf("signature %q does not match template %q", name, tpl.Name)
 				}
 				// Found e.g. ConnectableInt by itself, and it has embeded types.
 				for _, embed := range tpl.Embeds {
@@ -94,30 +105,54 @@ func generateApplies(tpls *templatemanager, signature string, next func(*apply))
 					embed = fmt.Sprintf("%s %s", embed, method)
 					// Now generate for e.g. "ObservableInt SubscribeOn" if it is not already known
 					if _, present := known[embed]; !present {
-						err := generate(embed)
+						msgs, err := generate(embed, types)
+						missing = append(missing, msgs...)
 						if err != nil {
-							return err
+							return missing, err
 						}
 					}
 				}
 			}
 		}
 
-		// No need to return an error, the type checking loop will eventually report missing type to the user.
-		return nil
+		// No need to return an error, the type checking loop will eventually
+		// report missing type to the user.
+		missing = append(missing, fmt.Sprintf("missing %q", signature))
+		//fmt.Println("MISSING", signature)
+		return missing, nil
 	}
-	return generate(signature)
+	return generate(signature, nil)
 }
 
-func (tpls *templatemanager) find(signature string) (*Template, []string) {
+// find matches the signature against a sorted list of templates. If types has
+// entries, then the types matched from the signature must be present in the
+// types list.
+func (tpls *templatemanager) find(signature string, types []string) (*Template, []string) {
 	for _, t := range tpls.Templates {
 		if t.signature != nil {
 			sigmatch := t.signature.FindStringSubmatch(signature)
 			if len(sigmatch) == 0 {
 				continue
 			}
+			if len(types) != 0 && !contains(types, sigmatch[1:]) {
+				continue
+			}
 			return t, sigmatch[1:]
 		}
 	}
 	return nil, nil
+}
+
+// contains returns true when all strings in sel are also present in set.
+func contains(set []string, sel []string) bool {
+	has := make(map[string]bool)
+	for _, e := range set {
+		has[e] = true
+	}
+	for _, e := range sel {
+		if !has[e] {
+			return false
+		}
+	}
+	return true
 }

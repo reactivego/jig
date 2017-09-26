@@ -40,7 +40,6 @@ func (p *Package) loadGeneratePragmasFromFile(file *ast.File) (messages []string
 			}
 			// jig:no-support
 			if strings.HasPrefix(comment.Text, jigNoSupport) {
-				messages = append(messages, fmt.Sprint("ignoring all templates marked with //jig:support"))
 				p.ignoreSupport = true
 			}
 		}
