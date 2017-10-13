@@ -50,6 +50,10 @@ type Template struct {
 	// e.g. ["Observable<Foo>"]
 	Embeds []string
 
+	// RequiredVars contains the set of template vars that are not allowed to be unassigned.
+	// e.g. ["Foo"]
+	RequiredVars []string
+
 	// identifier is the template name with all spaces and angle brackets around
 	// the template variable names removed.
 	// e.g. "ObservableFooMapBar"

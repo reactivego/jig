@@ -3,14 +3,10 @@ package pkg
 import (
 	"go/ast"
 	"go/token"
-	"regexp"
 	"strings"
 
 	"github.com/reactivego/jig/templ"
 )
-
-// Extract template variables, matches will contain [["<Foo>" "Foo"] ["<Bar>" "Bar"]]
-var reTemplateVar = regexp.MustCompile("<([[:word:]]+)>")
 
 // jig contains everything from templ.Template and transient stuff not needed after analyzing all ast files.
 type jig struct {
@@ -50,6 +46,12 @@ func newJig(packageName string, cgroup *ast.CommentGroup) *jig {
 					jig.Embeds = append(jig.Embeds, embed)
 					// If it embeds it, then it also needs it.
 					jig.Needs = append(jig.Needs, embed)
+				}
+			case jigRequiredVars:
+				requiredVars := strings.Split(kvmatch[2], ",")
+				for _, required := range requiredVars {
+					required = strings.TrimSpace(required)
+					jig.RequiredVars = append(jig.RequiredVars, required)
 				}
 			}
 		}

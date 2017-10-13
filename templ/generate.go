@@ -137,6 +137,27 @@ func (tpls *templatemanager) find(signature string, types []string) (*Template, 
 			if len(types) != 0 && !contains(types, sigmatch[1:]) {
 				continue
 			}
+			if len(t.RequiredVars) != 0 {
+				if len(t.Vars) != len(sigmatch[1:]) {
+					continue
+				}
+				vartypes := make(map[string]string)
+				for i, typeval := range sigmatch[1:] {
+					vartypes[t.Vars[i]] = typeval
+				}
+				// vartypes is now e.g. map["Foo":"Int32", "Bar":"Float64"]
+				rejectMatch := false
+				for _, varname := range t.RequiredVars {
+					if vartypes[varname] == "" {
+						fmt.Printf(">>>> %+q %+q %+q %+q\n", vartypes, sigmatch[1:], t.Vars, t.RequiredVars)
+						rejectMatch = true
+						break
+					}
+				}
+				if rejectMatch {
+					continue
+				}
+			}
 			return t, sigmatch[1:]
 		}
 	}
