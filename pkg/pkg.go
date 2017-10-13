@@ -37,12 +37,13 @@ type Package struct {
 	// typemap contains a mapping of display types e.g. Foo to real types e.g. foo
 	typemap map[string]string
 
-	// ignoreSupport when set to true will prevent support templates from being
-	// included in the generated source code. Support code is assumed to be
-	// provided in another way. Support templates are templates explicitly
-	// marked as such (jig:support) and templates that are marked as needed by
-	// another template but that don't have template vars themselves.
-	ignoreSupport bool
+	// forceCommon (default set to false) forces common code templates (i.e. not
+	// specialized on type) to be included in the generated source code. Common
+	// code normally assumed to be present already in the package providing the
+	// templates. Common code templates are templates either explicitly marked
+	// as such (jig:common) and templates that are marked as needed by another
+	// template but that don't have template vars themselves.
+	forceCommon bool
 }
 
 // NewPackage creates a package given a single directory where the source of

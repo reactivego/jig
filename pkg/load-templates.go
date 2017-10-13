@@ -15,16 +15,16 @@ import (
 // packages and then turn all jigs that are found in those files into templates.
 func (p *Package) LoadTemplates(tplr templ.Templater) (messages []string, err error) {
 	for _, pkgInfo := range p.allPackages {
+		ignoreSupportTemplates := !p.forceCommon && p.Dir == pkgInfo.Pkg.Path()
 		var jigs []*jig
 		for _, file := range pkgInfo.Files {
-			jigs = append(jigs, p.LoadTemplatesFromFile(file)...)
+			jigs = append(jigs, p.LoadTemplatesFromFile(file, ignoreSupportTemplates)...)
 		}
 		if jigs == nil {
 			continue
 		}
-		if !p.ignoreSupport {
-			// Convert support declarations into Needs on the templates
-			p.transformSupportIntoNeeds(jigs)
+		if !ignoreSupportTemplates {
+			p.transformCommonIntoNeeds(jigs)
 		}
 		// Now all jigs have been read, so we can now tell every jig to define their template.
 		err = p.defineTemplates(tplr, jigs)
@@ -32,10 +32,10 @@ func (p *Package) LoadTemplates(tplr templ.Templater) (messages []string, err er
 			return messages, err
 		}
 		var msg string
-		if p.ignoreSupport && p.Name == pkgInfo.Pkg.Name() {
-			msg = fmt.Sprintf("found %d templates in package %q (%s) ignoring support templates", len(jigs), pkgInfo.Pkg.Name(), pkgInfo.Pkg.Path())
-		} else {
+		if !ignoreSupportTemplates {
 			msg = fmt.Sprintf("found %d templates in package %q (%s)", len(jigs), pkgInfo.Pkg.Name(), pkgInfo.Pkg.Path())
+		} else {
+			msg = fmt.Sprintf("found %d templates in package %q (%s) ignoring support templates", len(jigs), pkgInfo.Pkg.Name(), pkgInfo.Pkg.Path())
 		}
 		messages = append(messages, msg)
 	}
@@ -47,7 +47,7 @@ func (p *Package) LoadTemplates(tplr templ.Templater) (messages []string, err er
 // declare templates and use that to determine source range of the associated template definition.
 // Then walk the file ast and extract source in the ranges determined before and add it to the
 // correct jig.
-func (p *Package) LoadTemplatesFromFile(file *ast.File) []*jig {
+func (p *Package) LoadTemplatesFromFile(file *ast.File, ignoreSupportTemplates bool) []*jig {
 	var jigs []*jig
 	var jig *jig
 	for _, cgroup := range file.Comments {
@@ -62,8 +62,8 @@ func (p *Package) LoadTemplatesFromFile(file *ast.File) []*jig {
 				jig.Close(cgroup.Pos())
 				packageName := file.Name.String()
 				jig = newJig(packageName, cgroup)
-				jigHasSupportingRole := jig.support || len(jig.Vars) == 0
-				if !(p.ignoreSupport && jigHasSupportingRole && packageName == p.Name) {
+				jigHasSupportingRole := jig.common || len(jig.Vars) == 0
+				if !ignoreSupportTemplates || !jigHasSupportingRole {
 					jigs = append(jigs, jig)
 				}
 				break
@@ -114,19 +114,20 @@ func (c sourceCollector) Visit(node ast.Node) ast.Visitor {
 	return nil
 }
 
-// transformSupportIntoNeeds will convert support declarations of a jig into Needs on the other jigs
-func (p *Package) transformSupportIntoNeeds(jigs []*jig) {
-	var supports []string
+// transformCommonIntoNeeds will convert common declarations of a jig
+// into Needs on the other jigs
+func (p *Package) transformCommonIntoNeeds(jigs []*jig) {
+	var common []string
 	for _, jig := range jigs {
-		if jig.support {
-			supports = append(supports, jig.Name)
+		if jig.common {
+			common = append(common, jig.Name)
 		}
 	}
 	for _, jig := range jigs {
-		if jig.support {
+		if jig.common {
 			continue
 		}
-		jig.Needs = append(supports, jig.Needs...)
+		jig.Needs = append(common, jig.Needs...)
 	}
 }
 

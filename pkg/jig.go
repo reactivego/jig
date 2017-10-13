@@ -15,8 +15,8 @@ type jig struct {
 	End    token.Pos
 	Source string
 
-	// support template is added to Needs [] of every other jig.
-	support bool
+	// common template is added to Needs [] of every other jig.
+	common bool
 }
 
 func newJig(packageName string, cgroup *ast.CommentGroup) *jig {
@@ -24,8 +24,8 @@ func newJig(packageName string, cgroup *ast.CommentGroup) *jig {
 	jig.PackageName = packageName
 	jig.Pos = cgroup.End()
 	for _, comment := range cgroup.List {
-		if comment.Text == jigSupport {
-			jig.support = true
+		if comment.Text == jigCommon {
+			jig.common = true
 			continue
 		}
 

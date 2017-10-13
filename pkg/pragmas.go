@@ -6,9 +6,9 @@ import "regexp"
 // It also marks the end of any previous template.
 const jigTemplate = "//jig:template"
 
-// jigSupport is the jig:support comment pragma that marks this template as purely
-// for support needed by every generated template.
-const jigSupport = "//jig:support"
+// jigCommon is the jig:common comment pragma that marks this template as purely
+// for common support code needed by every generated template.
+const jigCommon = "//jig:common"
 
 // jigNeeds is the comment pragma jig:needs that indicates what other templates this
 // template needs for its own implementation. Although needs is optional, it guides the
@@ -53,8 +53,8 @@ const jigType = "//jig:type"
 // template named "Observable<Foo> Map<Bar>" and using types int32 and float32 for Foo and Bar respectively.
 const jigName = "//jig:name"
 
-// jigNoSupport comment pragma
-const jigNoSupport = "//jig:no-support-code-generation"
+// jigForceCommon pragma instructs jig to always generate common support code.
+const jigForceCommon = "//jig:force-common-code-generation"
 
 var (
 	reCommentPragma = regexp.MustCompile("^(//jig:[-[:word:]]+)[[:space:]]+(.+)$")

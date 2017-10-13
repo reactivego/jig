@@ -38,9 +38,9 @@ func (p *Package) loadGeneratePragmasFromFile(file *ast.File) (messages []string
 					p.typemap[kvmatch[1]] = kvmatch[2]
 				}
 			}
-			// jig:no-support
-			if strings.HasPrefix(comment.Text, jigNoSupport) {
-				p.ignoreSupport = true
+			// jig:force-common-code-generation
+			if strings.HasPrefix(comment.Text, jigForceCommon) {
+				p.forceCommon = true
 			}
 		}
 	}
