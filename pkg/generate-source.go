@@ -1,10 +1,14 @@
 package pkg
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"go/ast"
+	"math"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -39,10 +43,7 @@ func (p *Package) HasGeneratedSource(name string) bool {
 }
 
 // GenerateSource will take the passed name and source and add it to the package.
-// Currently implemented in such way that every source fragment will be written
-// to its own file. Eventually you want multiple generated fragments to share
-// a physical file on disk. Especially when you have more that e.g. 50 generated
-// source fragments.
+// You want multiple generated fragments to share a physical file on disk.
 func (p *Package) GenerateSource(packageName, name, source string) error {
 	return p.GenerateSourceAppendFile(p.filename, packageName, name, source)
 }
@@ -60,8 +61,7 @@ func (p *Package) GenerateSourceAppendFile(filename *template.Template, packageN
 	filenamebuf := &bytes.Buffer{}
 	filename.Execute(filenamebuf, data)
 	path := filepath.Join(p.Dir, filenamebuf.String())
-	file, present := p.fileset[path]
-	if present {
+	if file, present := p.fileset[path]; present {
 		err := p.WriteFile(sourcebuf, file)
 		if err != nil {
 			return err
@@ -76,12 +76,12 @@ func (p *Package) GenerateSourceAppendFile(filename *template.Template, packageN
 	// Rewrite imports clause for the source.
 	fixedsource, err := imports.Process("", sourcebuf.Bytes(), nil)
 	if err != nil {
-		return err
+		return newSourceError(sourcebuf, err)
 	}
 
-	file, err = p.Config.ParseFile(path, string(fixedsource))
+	file, err := p.Config.ParseFile(path, string(fixedsource))
 	if err != nil {
-		return err
+		return newSourceError(bytes.NewBuffer(fixedsource), err)
 	}
 
 	// Add file to the fileset, idempotent
@@ -90,4 +90,33 @@ func (p *Package) GenerateSourceAppendFile(filename *template.Template, packageN
 	// Remember this file as the most current one.
 	p.generated[name] = path
 	return nil
+}
+
+func newSourceError(sourcebuf *bytes.Buffer, err error) error {
+
+	reErr := regexp.MustCompile("^[^0-9]*([0-9]+):(.*)$")
+	strErr := err.Error()
+	lineErr := 0
+	decWidth := 5
+	result := reErr.FindStringSubmatch(strErr)
+	if len(result) == 3 {
+		if lineErr, err = strconv.Atoi(result[1]); err == nil {
+			decWidth = int(math.Ceil((math.Log10(float64(lineErr)))))
+			decWidth++
+			strErr = fmt.Sprintf("%*d:%s\n", decWidth, lineErr, result[2])
+		}
+	}
+
+	dumpbuf := &bytes.Buffer{}
+	line := 1
+	scanner := bufio.NewScanner(sourcebuf)
+	for scanner.Scan() {
+		fmt.Fprintf(dumpbuf, "%*d  %s\n", decWidth, line, scanner.Text())
+		if line == lineErr {
+			break
+		}
+		line++
+	}
+
+	return fmt.Errorf("%v\n%v", dumpbuf, strErr)
 }
