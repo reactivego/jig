@@ -31,10 +31,13 @@ func (p *Package) LoadTemplates(tplr templ.Templater) (messages []string, err er
 		if err != nil {
 			return messages, err
 		}
-		messages = append(messages, fmt.Sprintf("found %d jig templates in package %q", len(jigs), pkgInfo.Pkg.Path()))
-		if p.ignoreSupport {
-			messages = append(messages, fmt.Sprint("ignoring all support only templates"))
+		var msg string
+		if p.ignoreSupport && p.Name == pkgInfo.Pkg.Name() {
+			msg = fmt.Sprintf("found %d templates in package %q (%s) ignoring support templates", len(jigs), pkgInfo.Pkg.Name(), pkgInfo.Pkg.Path())
+		} else {
+			msg = fmt.Sprintf("found %d templates in package %q (%s)", len(jigs), pkgInfo.Pkg.Name(), pkgInfo.Pkg.Path())
 		}
+		messages = append(messages, msg)
 	}
 	tplr.Sort()
 	return messages, nil
@@ -57,9 +60,10 @@ func (p *Package) LoadTemplatesFromFile(file *ast.File) []*jig {
 			// jig:template <name>
 			if strings.HasPrefix(comment.Text, jigTemplate) {
 				jig.Close(cgroup.Pos())
-				jig = newJig(file.Name.String(), cgroup)
+				packageName := file.Name.String()
+				jig = newJig(packageName, cgroup)
 				jigHasSupportingRole := jig.support || len(jig.Vars) == 0
-				if !(p.ignoreSupport && jigHasSupportingRole) {
+				if !(p.ignoreSupport && jigHasSupportingRole && packageName == p.Name) {
 					jigs = append(jigs, jig)
 				}
 				break
