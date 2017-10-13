@@ -1,22 +1,67 @@
 # jig - Just-in-time Generics for Go
+[![](http://godoc.org/github.com/reactivego/jig?status.png)](http://godoc.org/github.com/reactivego/jig)
 
-In the summer of 2017 while everything was nice and quiet at [work](https:///simplemind.eu), I set out to find a way to add generic programming to Go. The biggest hurdle was to avoid code generation bloat. So I implemented a demand driven approach that would result in the automatic generation of the minimal amount of code for a specific combination of types. The result is called *Just-in-time Generics for Go*. Or **jig** for short.
+To install *jig*, open a terminal and type:
 
-If you're more a 'learning by doing' kind of person, check out the `rx` library [Quick Start](https://github.com/reactivego/rx/doc/quickstart.md). It demonstrates how to write code using the `rx` template library and how to use *jig* to generate code for the used templates.
+```bash
+go get github.com/reactivego/jig
+```
+> NOTE: only tested on Mac
+
+*Jig* provides generics for the Go programming language. It generates idiomatic Go code from pieces of generic code written in terms of place-holder types. *Jig* is implemented as a command `jig` you run from the command-line just like `go` itself. It is designed such that it generates the minimal amount of code for an automatically detected combination of types. I call this approach *Just-in-time Generics for Go* (or **jig**) because code is generated on demand only when it is needed and not before.
+
+## Table of Contents
+
+<!-- MarkdownTOC -->
+
+- [Rationale](#rationale)
+- [Unique selling points](#unique-selling-points)
+- [What is a Jig?](#what-is-a-jig)
+- [Command-Line](#command-line)
+- [Directory Structure](#directory-structure)
+- [Defining Templates](#defining-templates)
+- [Strong typing versus interface{}](#strong-typing-versus-interface)
+- [Using Templates](#using-templates)
+- [Pragma Reference](#pragma-reference)
+	- [Template Pragmas](#template-pragmas)
+		- [jig:template](#jigtemplate)
+		- [jig:support](#jigsupport)
+		- [jig:needs](#jigneeds)
+		- [jig:embeds](#jigembeds)
+		- [jig:required-vars](#jigrequired-vars)
+		- [jig:end](#jigend)
+	- [Generator Pragmas](#generator-pragmas)
+		- [jig:file](#jigfile)
+		- [jig:type](#jigtype)
+		- [jig:no-support-code-generation](#jigno-support-code-generation)
+		- [jig:name](#jigname)
+- [Advanced Topics](#advanced-topics)
+	- [Using jig inside a Template Library Package](#using-jig-inside-a-template-library-package)
+	- [Type Signature Matching](#type-signature-matching)
+	- [Revision Handling](#revision-handling)
+	- [First and Higher Order Types](#first-and-higher-order-types)
+- [Generics Libraries](#generics-libraries)
+- [Acknowledgements](#acknowledgements)
+- [License](#license)
+
+<!-- /MarkdownTOC -->
 
 ## Rationale
-For more than a year, I've been working regularly in my spare time on implementing ReactiveX for Go using idiomatic strongly typed Go code. In order to do this I needed a way to write code that is independent of any particular combination of types; I needed generics. I have to confess that I'm actually not that fond of generics. Bad experiences with gibberish error messages and massive code bloat in C++ had soured me on the paradigm.
+In the summer of 2017 when things were nice and quiet at [work](https:///simplemind.eu), I thought to myself, if there is only one thing I could add to Go, what would that be? For me the answer was generics, so I set out to find a way to add generics to Go.
 
-I've tried more than a handful of generic programming and code generation solutions for Go. None of these were powerfull enough to satisfy my requirements. So I decided to take a stab at creating a generic programming solution for Go myself. The rules I set out for myself to follow were:
+For more than a year, I had been working regularly in my spare time on implementing [ReactiveX](http://reactivex.io/) for Go using idiomatic strongly typed Go code. In order to do this I needed a way to write code that is independent of any particular combination of types; I needed generics. I have to confess that I'm actually not that fond of generics. Bad experiences with gibberish error messages and massive code bloat in C++ had soured me on the paradigm.
 
-- Generic code has to be proper Go code that can be build with `go build` directly.
-- Generic code has to be testable Go code that can be tested with `go test` directly.
-- A generic code package should be a normal Go package that can be downloaded using `go get` directly.
-- Code generated from generic code should be the minimum required to make a program work.
+I've tried more than a handful of generic programming and code generation solutions for Go. None of these were powerfull enough to satisfy my requirements. So I decided to take a stab at creating a generic programming solution for Go myself.
+
+## Unique selling points
+- No explicit specialization of templates is needed, types are automatically discovered by *jig*.
+- Templates can be specialized to a specific type (e.g. `int32`, `string`) **or** to the *any* type (i.e. `interface{}`).
+- Compilation driven code generation to minimize the amount of code generated.
+- Templates are working Go code that can be tested and build.
+- A template package is a normal Go gettable package.
 
 ## What is a Jig?
-I actually thought of the name *jig* before I knew what it meant, but after I found out, I was sure I had chosen the right name.
-A [*jig*] is a device used in the manufacturing of products to hold the work and to guide a tool. An example of a *jig* is when a key is duplicated; the original is used as a *jig* so the new key can have the same path as the old one.
+I actually thought of the name *jig* before I knew what it meant. After finding out though, I felt it was pretty appropriate. A [*jig*](https://en.wikipedia.org/wiki/Jig_(tool)) is a device used in the manufacturing of products to hold the work and to guide a tool. An example of a *jig* is when a key is duplicated; the original is used as a *jig* so the new key can have the same path as the old one.
 
 For this project, a *jig* is defined as a working piece of code that is written in terms of place-holder types and that is then used to generate code for specific (combinations of) types.
 
@@ -27,30 +72,19 @@ func (s *FooStack) Push(v foo) {
     *s = append(*s, v)
 }
 ```
+> Look for the place-holders `Foo` and `foo` in the code above.
 
-Jig templates should be fairly granular. Every type and every method associated with that type and every function is normally stored in its own `jig:template`. The reason for that is that methods on which your code does not depend will be left out of the generated code. Also if the templates are not granular enough *jig* may e.g. fail to find a template for a missing method. In practice these issues are quickly detected and fixed during template library development while you write tests for your library and *jig* reports errors about things it can't generate.
-
-## Unique selling points
-
-1. Compiler driven code generation to minimize the amount of code generated.
-2. No explicit declaration of template specialization, automatic specialization by looking at code that uses the templates.
-3. Templates are working Go code that can be tested and build.
-4. A template package is a normal Go gettable package.
-5. Templates can be specialized to a specific type (e.g. `int32`, `string`) **or** to the *any* type (i.e. `interface{}`).
-
-To my knowledge **jig** is the only generic programming tool for Go that generates the absolutely minimal amount of code. Also, templates are written as idiomatic Go code with place-holder types. Code using the templates doesn't need specific template declarations. Building and testing code works normally. There are no cryptic error messages. And on top of that, you can generate code for specific types or you can choose to generate code for the `interface{}` type.
+Jig templates should be fairly granular. Every type and every method associated with that type and every function is normally stored in its own `jig:template`. The reason for that, is that methods on which your code does not depend will be left out of the generated code. Also if the templates are not granular enough *jig* may e.g. fail to find a template for a missing method. In practice these issues are quickly detected and fixed during template library development while you write tests for your library and *jig* reports errors about things it can't generate.
 
 ## Command-Line
 
-To install *jig*, open a terminal screen and type:
+To get help, call jig with the `--help` or `-h` flag:
+
 ```bash
-go get github.com/reactivego/jig
+jig -h
 ```
-
-To get help:
-
 ```bash
-Mac:~ $ jig --help
+Mac:~ $ jig -h
 Usage of jig [flags] [<dir>]:
   -c, --clean     Remove files generated by jig
   -r, --regen     Force regeneration of all code by jig
@@ -59,27 +93,42 @@ Usage of jig [flags] [<dir>]:
 
 The *jig* command is a self-contained single binary file. When you are working on a program you open a terminal and change to the directory of the code you are developing. Running *jig* without any parameters will make *jig* find out what types are missing and then generate and add this new code to the already exisiting code.
 
-By default *jig* is quiet unless it finds an error. To make *jig* more chatty use the `--verbose` flag. 
+By default *jig* is quiet unless it finds an error. To make *jig* more chatty use the `--verbose` or `-v` flag. 
 
-You can also run *jig* with the `--regen` flag to force it to re-generate all code it had already generated previously. This is useful for when the template library has changed, or when you are no longer using some types in your code to clean out generated code no longer needed.
+You can also run *jig* with the `--regen` or `-r` flag to force it to re-generate all code it had already generated previously. This is useful for when the template library has changed, or when you are no longer using some types in your code to clean out generated code no longer needed.
 
-The templates *jig* uses are picked up from the packages that are imported by your code. So if your code is not importing a library *jig* will not find it. So it is not enough to use `go get <template library>` to install the library in your `GOPATH`, you will also need to `import _ "<template library>"` it in your code. To see what templates *jig* is finding and where, run `jig --regen --verbose` or more succinctly `jig -rv`. So, like this:
+The templates *jig* uses are picked up from the packages that are imported by your code. So if your code is not importing a library, then *jig* will not be able to find it. So it is not enough to use `go get <template library>` to install the library in your `GOPATH`, you will also need to `import _ "<template library>"` it in your code. To see what templates *jig* is finding and where, run `jig --regen --verbose` or more succinctly `jig -rv`. So, like this:
 
 ```bash
 Mac:example $ jig --rv
 removing file "stack.go"
-found 5 jig templates in package "github.com/reactivego/jig/example/stack" 
+found 4 jig templates in package "github.com/reactivego/jig/example/stack" 
 ...
 ```
 
-*Jig* works by repeatedly compiling your code. Every compile cycle it may get back several errors that tell it about missing types or missing methods. *Jig* then creates type signatures for these errors and then goes through all the templates it knows of to see if it can specialize them so they'll fix the errors. After generating all the code it can, *jig* will then load the whole program into memory again and compile it again. *Jig* knows when to stop, when either no more errors were found or when no code could be generated to fix an error. At that time remaining errors are reported to the screen.
+*Jig* works by repeatedly compiling your code. Every compile cycle it may get back several errors that tell it about missing types or missing methods. *Jig* then creates type signatures for these errors and then goes through all the templates it knows of to see if it can specialize them so they'll fix the errors. After generating all the code, *jig* will then load the whole program into memory again and compile it again. *Jig* knows when to stop, when either no more errors were found or when no code could be generated to fix an error. At that time remaining errors are reported to the screen.
 
-## Writing Generic Code
+The code generated by *jig* contains the line `//go:generate jig --regen`. This will allow you to run for example `go generate ./...` to regenerate all files generated by jig.
 
-### Directory Structure
-**To be specified**
+## Directory Structure
 
-### Defining Templates
+Best practice when writing a template library, is to have it separate from any commands or tests that uses it. In the directory structure below, `stack.go` in the `stack` folder contains the templates. The `example` folder contains a command `main.go` that uses the library and `stack.go` in the `example` folder contains the code generated by *jig*. For the `test` folder this is the same; `stack_test.go` contains the tests and `stack.go` the generated code.
+
+```bash
+$GOPATH/src/github.com/reativego/jig/example/
+                                     └── stack/
+                                        ├── example/
+                                        │   ├── main.go
+                                        │   └── stack.go
+                                        ├── test/
+                                        │   ├── stack_test.go
+                                        │   └── stack.go
+                                        └── stack.go
+```
+
+ A template library can easily become dependent on its own templates when it also needs to be buildable as a normal Go package. That is not a problem, *jig* can be used to generate the code on which the library depends from the templates in the library itself.
+
+## Defining Templates
 The approach we take with *jig* is to have generic code written in terms of place-holder types like `Foo` and `Bar`. These are called [metasyntactic](https://en.wikipedia.org/wiki/Metasyntactic_variable) type names. So using these type names you can write normal Go code that will compile when you `go build` it. Let's look at an extremely simple example; a stack with just a `Push` and `Pop` method:
 
 ```go
@@ -104,15 +153,13 @@ func (s *FooStack) Pop() (foo, bool) {
 	return v, true
 }
 ```
+> *NOTE*
+> - This is strongly typed Go code in terms of place-holder type `foo`.
+> - `FooStack`, `(FooStack) Push` and `(FooStack) Pop` have `Foo` in somewhere in their name.
+> - You're not limited to using `Foo`, you can use any place-holder name you want, really.
+> - The use of both `Foo` and `foo`. Where `Foo` refers to a type and `foo` is the actual name of the type.
 
-So this is pretty normal strongly typed Go code. We note a couple of things here:
-
-1. A place-holder type `foo` is introduced.
-2. The definition of the type `FooStack`, `Push` and `Pop` methods in terms of the `foo` type.
-3. You're not bound to using e.g. `Foo` and `Bar`, you can use any place-holder name you want, really.
-4. Note the use of both Foo and foo. This is needed if you want the templates to work with non-exported types and built-in types.
-
-This code will compile, and you can write tests to validate the code. Jig will use the code as a template for generating specializations where the place-holder type is replaced by another type, but also the use of those place-holders names in identifiers and even comments will be replaced with proper type names by *jig*.
+This code will compile, and you can write tests (in a different folder) to validate the code. Jig will use the code as a template for generating specializations where the place-holder type is replaced by another type, but also the use of those place-holders names in identifiers and even comments will be replaced with proper type names by *jig*.
 
 However, in order to operate correctly, jig needs some help in determining what's part of a template and what's just support code. For that we use comment pragmas to tell jig what's what. To tell jig about templates we use `jig:template`. Below, we've added these pragmas to the generic stack code:
 
@@ -144,18 +191,40 @@ func (s *FooStack) Pop() (foo, bool) {
 	return v, true
 }
 ```
-
-Again, we note a couple of things here:
-
-1. Three templates are declared: type `<Foo>Stack` and methods `<Foo>Stack Push` and `<Foo>Stack Pop`.
-2. There **must** be no space in front of the `jig:template` pragma declaration.
-3. There **must** be an empty line after the template declaration line.
-4. Do you see how we use &lt; and &gt; to tell jig what part of the identifier is a type var?
-5. In the code where we write `foo` we mean the actual type and `Foo` means the capitalized refer type used in e.g. identifiers.
+> *NOTE*
+> - Three templates are declared: `<Foo>Stack`, `<Foo>Stack Push` and `<Foo>Stack Pop`.
+> - See how we use `<` and `>` to tell *jig* what part of an identifier is a type var.
+> - Comment pragmas cannot have space between `//` and `jig:template`.
+> - A comment pragma must be separated from the actual code by a an empty line.
 
 The information provide by these three pragmas is enough for jig to work with. This simple stack is on github as part of the jig example code. To use it `import _ "github.com/reactivego/jig/example/stack"`.
 
-### Using Templates
+## Strong typing versus interface{}
+
+Choosing whether to use [`interface{}`](https://tour.golang.org/methods/14) isn't really about generic programming. Although, you could use `interface{}` as a place-holder type. However, in doing so you will have to give up on compile time type checking and open yourself up to a lot of potential bugs only caught at runtime.
+
+There are valid reasons for using `interface{}` though, and that has to do with storing values of different types in the same container. So if you want to store e.g. `int`, `string` and `struct` values in the same `slice` or `map`, then `interface{}` is what you want to use. The cost, of course, is that you then need to type assert the values you retrieve back into the underlying type before you can use them.
+
+Another reason you may want to consider using code specified in terms of `interface{}` in your templates, is if the implementation is very large but not type specific and you are instantiating it a lot for different concrete types. In this case a strongly typed implementation could be implemented by wrapping around an implementation defined in terms of `interface{}`. In doing so, retaining strong type checks at the cost of an extra indirection through `interface{}` based code.
+
+By the way, *jig* is fully capable of specializing templates in terms of `interface{}` as opposed to specific types. Using the `Stack` example above, if you use it in the following way:
+
+```go
+var stack Int32Stack
+```
+
+This will generate a strongly typed stack that only allows you to store `int32` values.
+
+But using it in the following way:
+
+```go
+var stack Stack
+```
+
+This will actually generate a stack in terms of the `interface{}` type. *Jig* internally maps the absense of a reference type name to indicate `interface{}` as the actual type to use.
+
+
+## Using Templates
 Now let's create a little program that uses this generic stack:
 
 ```go
@@ -172,13 +241,11 @@ func main() {
 	s.Push("Hello, World!")
 }
 ```
-
-Things to note are:
-
-1. We are importing the stack template package purely so jig can access its contents as we use _ as the name.
-2. The `jig:file` pragma tells jig to store generated code in a file named `stack.go`
-3. We create a `StringStack` variable to indicate we want a stack of strings.
-4. Jig knows all built-in types and knows that `String` really means the actual type `string`.
+> *NOTE*
+> - We're importing `github.com/reactivego/jig/example/stack` only so jig can access it.
+> - The `jig:file` pragma tells jig to store generated code in a file named `stack.go`
+> - We create a `StringStack` variable to indicate we want a stack of strings.
+> - *jig* knows all built-in types and knows that `String` really means the actual type `string`.
 
 After dropping to the command-line and changing to the directory where this file is located, we run jig.
 
@@ -203,150 +270,335 @@ func (s *StringStack) Push(v string) {
 	*s = append(*s, v)
 }
 ```
-
-Things to note are:
-
-1. The first line showing that this code was generated by jig.
-2. A `go:generate` pragma to run jig again when you run `go generate` on the command-line.
-3. The generated `jig:name` pragmas uniquely identify every fragment of generated code.
-4. All occurrences of `Foo` in the templates have been replaced with `String`.
-5. All occurrences of `foo` in the templates have been replaced with `string`.
-6. There is no implementation of `Pop` in the generated code, because it isn't needed!
+> *NOTE*
+> - There is a `go:generate` comment pragma to run `jig --regen`.
+> - The generated `jig:name` pragmas uniquely identify every fragment of generated code.
+> - All occurrences of `Foo` and `foo` from the templates have been replaced with `String` and `string`.
+> - There is no implementation of `Pop` in the generated code, because it isn't needed!
 
 When we run `go run main.go stack.go` the program will be build and run correctly.
 
+The next thing we'll do is use `Stack` instead of `StringStack`, to see what happens.
 
-**now add use of Pop to program**
+```go
+package main
 
-**change use of StringStack to Stack**
+import (
+	"fmt"
+	_ "github.com/reactivego/jig/example/stack"
+)
 
-**call jig -r again**
+//jig:file stack.go
 
-**show that code is now using interface{}**
+func main() {
+	var s Stack
+	s.Push("Hello, World!")
+	if value, ok := s.Pop(); ok {
+		fmt.Println(value)
+	}
+}
+```
+> *NOTE*
+> - We have also added a call to `Pop` and `fmt.Println`.
 
-**show Pop has been generated**
+Now calling `jig -rv` will regenerate the `stack.go` file.
 
-**run program again**
+```bash
+Mac:example $ jig -rv
+removing file "stack.go"
+found 4 jig templates in package "github.com/reactivego/jig/example/stack"
+generating "Stack"
+  Stack
+generating "Stack Push"
+  Stack Push
+generating "Stack Pop"
+  Stack Pop
+writing file "stack.go"
+```
 
-**show output**
+Following is what was generated:
+```go
+// Code generated by jig; DO NOT EDIT.
 
-**mention you can switch back to StringStack by just changing Stack to StringStack and running `go generate`**
+//go:generate jig --regen
 
-## Advanced Subjects
+package main
 
-In the previous sections we've been looking at just the surface of what's possible with jig. We now look at the more advanced subjects that really show the power of this generic programming tool.
+//jig:name Stack
 
-### Working with Non-exported types
+type Stack []interface{}
 
-**Explain how non-exported types are treated**
+var zero interface{}
 
-### Specifying Template Needs
+//jig:name StackPush
 
-**Explain why using jig:needs speeds up  codegen**
+func (s *Stack) Push(v interface{}) {
+	*s = append(*s, v)
+}
 
-**Explaing how jig:needs influences generated code order**
+//jig:name StackPop
 
+func (s *Stack) Pop() (interface{}, bool) {
+	if len(*s) == 0 {
+		return zero, false
+	}
+	i := len(*s) - 1
+	v := (*s)[i]
+	*s = (*s)[:i]
+	return v, true
+}
+```
+> *NOTE*
+> - The code is now generated in terms of `interface{}`.
+> - There is now an implementation of `(Stack) Pop` present.
 
-### Using jig inside a Template Package
+If we now run `go run main.go stack.go` we get the following output:
 
-In order for template code to compile it normally needs code that you would generate when using the template package. An example can be found in `rx` where to implement the template code for mapping from one observable to another you need to have both type `ObservableFoo` as well as type `ObservableBar` available. However `ObservableFoo` is the template and `ObservableBar` is just an instance of that template for the `bar` type.
+```bash
+Mac:example $ go run main.go stack.go
+Hello, World!
+```
 
-Fortunately, *jig* has been designed to fully support this. You just need to take some precautions by instructing the generator of *jig* exactly what to generate.
+Switching back to a type safe `StringStack` is a matter of simply using that instead of `Stack` and running `jig` again to specialize stack for the `string` type.
 
-**show how this is setup for rx to illustrate**
+If you've made it to here, you will probably be able to become productive with *jig* right away, either as a user or hopefully also as an author of just-in-time generics libraries.
 
-### General Support Code
+## Pragma Reference
 
-**generator pragma**
+Pragmas are the means by which you express your intent to *jig*. There are two different kinds of pragmas. The first kind are called Template Pragmas, they are used in your template library code to inform *jig* about templates and how templates relate to each other. The second kind are called Generator Pragmas and are used in the program that uses the template library to configure the generator of *jig*
 
-**explain what jig:support means and why we need it**
+### Template Pragmas
+Tell *jig* about your templates.
 
-**explain how jig:support is problematic if you use jig to generate code inside template package**
+#### jig:template
+The pragma `jig:template` defines the start of a new template. Consequently, it also marks the end of any previous template. Following are examples of this pragma:
 
-### Type Signature Matching
+	//jig:template Subscriber
+	//jig:template Observable<Foo>
+	//jig:template Observable<Foo> Map<Bar>
 
-**explain details about template ordering related to length and # template vars**
+The first one defines a template without any template variables. The second one defines a template for the type `ObservableFoo` with a single template var `Foo`. The third one defines a template for method `MapBar` on `ObservableFoo` with two template vars `Foo` and `Bar`.
 
-### Struct Embedding
+The code that follows a `jig:template` pragma is the actual jig. Any occurence of `Foo` and `Bar` when specialized for conrete types will (during code generation) be replaced with a capitalized type name e.g. `Int32`, `String`, whereas any occurence of `foo` and `bar` will be replaced with an actual type name e.g. `int32`, `string`.
 
-**show the use of jig:embeds and why it is important**
+Following is a real example of a method jig in the `github.com/reactivego/rx` template ibrary.
+```go
+//jig:template Observable<Foo> Map<Bar>
 
-### Revision Handling
+// MapBar transforms the items emitted by an ObservableFoo by applying a function to each item.
+func (o ObservableFoo) MapBar(project func(foo) bar) ObservableBar {
+	observable := func(observe BarObserveFunc, subscribeOn Scheduler, subscriber Subscriber) {
+		observer := func(next foo, err error, done bool) {
+			var mapped bar
+			if !done {
+				mapped = project(next)
+			}
+			observe(mapped, err, done)
+		}
+		o(observer, subscribeOn, subscriber)
+	}
+	return observable
+}
+```
+#### jig:support
+The pragma `jig:support` marks this template as purely for support needed by every generated template. There are generally just a few templates marked as `jig:support` because there is normally only a small ammount of common support code. We want the templates to still build like normal Go code. So we refer to the shared code directly (without package name prefix) and have that same support code also written to the package that is using the templates.
 
-**explain why code revisions are different from normal go code packages**
+You may wonder why (as this is common code) we don't just import the symbols from the template library? The reason we even need `jig:support` is because code inside the template library package cannot refer to code inside that same package by package name. If that was allowed by Go, it would create an import cycle. Also, I am intentionally not considering dot imports to solve this problem.
 
-**show how Revision123() can be used to make your code depend on a certain code revision**
+#### jig:needs
+The pragma `jig:needs` indicates what other templates this template needs for its own implementation. Although needs is optional, it guides the order of code generation as needed templates are generated first. In corner cases, *jig* also decides between two equally viable matches based on the template variables already discovered. So `jig:needs` clauses can sometimes influence which template is used.
 
-**what to do in case your code fails because RevisionXXXX() is not longer available in the package***
+Following is an example of a needs clause:
 
-### First and Higher order types
+	//jig:needs Observable<Foo> Concat, SubscribeOptions
 
-**explain how generation of higher order types works**
+These clauses can also speed-up code generation considerably because *jig* will need less compile iterations. Types that would be found missing in the next compile will already have been generated. 
 
-### What about interface{}?
-Choosing whether to use [the empty interface](https://tour.golang.org/methods/14) isn't really about generic programming. It's the solution to reach for when you want to store heterogeneous types in the same container. So if you want to store `int`, `string` and `struct` values in the same `slice` or `map`, then `interface{}` is what you want to use. The cost, of course, is that you then need to typecast the values you retrieve back into the correct type before you can use them.
-
-Another reason you may want to consider using code specified in terms of the empty interface, is if the implementation is very large but not type specific and you are instantiating it a lot. In that case a strongly typed implementation could be implemented by using an implementation defined in terms of the empty interface. Thus, retaining strong type checks at the cost of an extra indirection through `interface{}` based generic code.
-
-By the way, *jig* is capable of specializing generic code in terms of `interface{}` just as easy as in terms of specific types.
-
-**show an example of simple program using Stack to show generation code that uses empty interface**
-
-### Pragma Reference
-
-**explain difference between template and generator pragmas**
-
-#### Template Pragmas
-
-##### jig:template
-The pragma `jig:template` defines the start of a new template. Consequently, it also marks the end of any previous template.
-
-##### jig:support
-The pragma `jig:support` marks this template as purely for support needed by every generated template. There is generally just a single template marked as `jig:support` because there is normally only a small ammount of support code.
-
-The reason we even need this is because code inside the template library package cannot refer to code inside that same package by package name. If that was allowed by Go, it would create an import cycle. We want the templates to still build like normal Go code, so we refer to the shared code directly and have it also written to the package that is using the templates.
-
-##### jig:needs
-The pragma `jig:needs` indicates what other templates this template needs for its own implementation. Although needs is optional, it guides the order of code generation as needed templates are generated first.
-
-##### jig:embeds
+#### jig:embeds
 The pragma `jig:embeds` can be used to tell jig that a certain type embeds other types. Generating a method for an embedded type could satisfy a missing method that is needed but that the curent type does not specify a template for. Code generation will then specialize the template code for the embedded type.
 
-##### jig:end
+	//jig:embeds Observable<Foo>
+
+Following is a real example of a jig that uses the `jig:embeds` pragma in the `github.com/reactivego/rx` template ibrary.
+
+```go
+//jig:template Connectable<Foo>
+//jig:embeds Observable<Foo>
+//jig:needs SubscribeOptions
+
+// ConnectableFoo is an ObservableFoo that has an additional method Connect()
+// used to Subscribe to the parent observable and then multicasting values to
+// all subscribers of ConnectableFoo.
+type ConnectableFoo struct {
+	ObservableFoo
+	connect func(options []SubscribeOptionSetter) Subscriber
+}
+```
+#### jig:required-vars
+
+The pragma `jig:required-vars` contains the list of template vars that have to be assigned a non empty value in order for a template to match a specific type signature. We use this seldomly. Requiring a template var to be non empty will prevent the template from matching to the any type and prevents specializing the template for `interface{}` for that template var.
+
+Following is an example of `jig:required-vars`:
+```go
+//jig:required-vars Foo, Bar
+```
+
+#### jig:end
 The pragma `jig:end` explicitly marks the end of a template.
 
-#### Generator Pragmas
+### Generator Pragmas
+Tell *jig* about generating code.
 
-#### jig:name
-The pragma `jig:name` is actually generated by jig itself to identify generated code fragments. When read back by the generator it knows which fragments are already present and it will be able to generate only the code that is really needed.
-E.g. ObservableInt32MapFloat32 might be a name that is written out for code generated for a template named "Observable<Foo> Map<Bar>" and using types int32 and float32 for Foo and Bar respectively.
+#### jig:file
+The pragma `jig:file` tells *jig* how to name the file(s) it is generating. The name you specify can optionally contain some predefined variables that get replaced with contextual information. In the name you can use the variables `{{.Package}}`, `{{.package}}`, `{{.Name}}` and `{{.name}}`. Package is the name of the package that contains the *jig* template being expanded and Name is the signature of the source fragment being expanded. Capitalized variables are created via `strings.Title(var)` and lowercase variant are create via `strings.ToLower(var)` allowing full control over the generated filename. Examples, assuming the template package name is `rx`:
 
-##### jig:file
-The generator pragma `jig:file` defines the template for the filenames to use when generating fragments. In the definition you can use the variables `{{.Package}}`, `{{.package}}`, `{{.Name}}` and `{{.name}}`. Package is the name of the package that contains the jig template being expanded and Name is the signature of the source fragment being expanded. Capitalized variables are created via `strings.Title(var)` and lowercase variant are create via `strings.ToLower(var)` allowing full control over the generated filename.
-Examples, assuming the template package name is 'rx':
-
-```
-jig.go				  -> jig.go
-jig{{.Package}}.go 	  -> jigRx.go
-{{.package}}{{.Name}} -> rxObservableInt32.go
-```
+	SomeName.go					-> SomeName.go
+	jig{{.Package}}.go 			-> jigRx.go
+	{{.package}}{{.Name}}.go	-> rxObservableInt32.go
 
 By default when `jig:file` is not found the filename template `jig{{.Package}}{{.Name}}.go` is used. This will cause every code fragment to be generated into its own file.
 
-##### jig:type
-The pragma `jig:type` allows you to specify the actual type for a refer type. Useful for specializing generic code for unexported types. e.g. `//jig:type Woot woot` In this case `Woot` would be used in the derive type names, functions and methods identifiers. Whereas the actual type is used in parameters and variable types.
+#### jig:type
+The pragma `jig:type` allows you to specify the actual type for a capitalized type reference. Useful for specializing generic code for unexported types. e.g. `//jig:type Size size` In this case `Size` would be used to refer to the type in identifiers etc. and `size` is the actual type used in parameters and variable types.
 
-##### jig:no-support-code-generation
-The pragma `jig:no-support-code-generation` tells the generator to not generate code for templates explicitly marked with pragma `jig:support` or for templates that are mentioned in a `jig:needs` pragma of other templates and that are not specialized on a template variable. This is only needed in template packages when using jig to generate supplemental code to support the main templates. In that case because you're generating in the library itself, the support code is already there and generating it again would create duplicate symbols.
+	//jig:type Size size
+	//jig:type Points []point
 
-## Further Reading
+As shown in the example, it is also possible to use punctuation e.g. `[]`, `*` in the actual type name.
 
-In the end I think I've created a pretty compelling solution. Jig is pretty close to perfect for what I need it for. In order to understand how to use *jig* we advice you to look at the template packages that have been created for it.
+#### jig:no-support-code-generation
+This is only needed in template packages when using *jig* to generate supplemental code to support the main templates. In that case because you're generating in the library itself, the support code is already there and generating it again would create duplicate symbols. The pragma `jig:no-support-code-generation` tells the generator to not generate code for templates explicitly marked with pragma `jig:support` or for templates that are mentioned in a `jig:needs` pragma and that are not themselves specialized on a template variable e.g. `SubscribeOptions`.
 
-- [github.com/reactivego/rx](https://www.github.com/reactivego/rx/)
+#### jig:name
+The pragma `jig:name` is actually generated by jig itself to identify generated code fragments. When read back by the generator it knows which fragments are already present and it will be able to generate only the code that is really needed.
+E.g. `ObservableInt32MapFloat32` might be a name that is written out for code generated for a template named `Observable<Foo> Map<Bar>` and using types `int32` and `float32` for `Foo` and `Bar` respectively.
 
 
-## Acknowledgments
+## Advanced Topics
+
+In previous sections, we've been looking at the mosts commonly used aspects of *jig*. We now look at more advanced subjects that detail some of the more difficult aspects of this generic programming tool.
+
+
+### Using jig inside a Template Library Package
+
+In order for template code to compile, it depends on code that could potentially also be generated with *jig*. An example can be found in `rx` where to implement the template code for mapping from one observable to another you need to have both type `ObservableFoo` as well as type `ObservableBar` available. However `ObservableFoo` is the template and `ObservableBar` is just an instance of that template for the `bar` type.
+
+Fortunately, *jig* has been designed to fully support this. You just need to take some precautions by instructing the generator side of *jig* exactly what to generate.
+
+The following code fragment shows how the `rx` library is configured for internal *jig* code generation.
+```go
+package rx
+
+// Code generated to make this rx package buildable should be written to rx.go
+
+//jig:file {{.package}}.go
+
+// Support code is code that is not parameterized on a template variable. Code
+// like that (when generated) is the same as the code already present in this 
+// package and would therefore lead to symbol collisions. Disable generation 
+// of support code using the jig:no-support-code-generation pragma.
+
+//jig:no-support-code-generation
+
+// foo is the first metasyntactic type. Use the jig:type pragma to tell jig that
+// Foo is the reference type name for actual type foo. Needed because we're
+// generating code into rx.go for foo.
+
+//jig:type Foo foo
+
+type foo int
+
+// bar is the second metasyntactic type. Use the jig:type pragma to tell jig that
+// Bar is the reference type name for actual type bar. Needed because we're
+// generating code into rx.go for bar.
+
+//jig:type Bar bar
+
+type bar int
+```
+> *NOTE*
+> - `jig:file` is used to tell jig to write code to a file with name `rx.go` (`{{.package}}` will be replaced by `rx`).
+> - `jig:no-support-code-generation` turns of generation of code not specialized on template variables.
+> - `jig:type` to tell jig there are 2 unexported types `foo` and `bar` that are referred to by names `Foo` and `Bar`.
+
+### Type Signature Matching
+
+*Jig* was build by looking at the errors that Go reports when it is trying to build code.
+
+The following error is an example of what happens when you use a type that doesn't exist:
+
+```bash
+./main.go:11:8: undefined: StringStack
+```
+
+So if you define a template with name `<Foo>Stack`, this is something *jig* can then work with, replacing occurences of `Foo` with `String` and occurences of `foo` with `string`.
+
+The following error is an example of using a method on a type that does exist:
+
+```bash
+./main.go:12:3: s.Push undefined (type StringStack has no field or method Push)
+```
+
+So Go reports that it knows of the type, but can't find the field or method. So if you defined a template `<Foo>Stack Push`, then this again is something that *jig* can work with.
+
+All of the detection capabilities of *jig* are build around just 5 simple regular expressions matching with errors reported by Go.
+
+```regexp
+^(.*):([0-9]*):([0-9]*): undeclared name: (.*)$
+^(.*):([0-9]*):([0-9]*): invalid operation: .* [(]value of type [*](.*)[)] has no field or method (.*)
+^(.*):([0-9]*):([0-9]*): invalid operation: .* [(]variable of type [*](.*)[)] has no field or method (.*)
+^(.*):([0-9]*):([0-9]*): invalid operation: .* [(]value of type (.*)[)] has no field or method (.*)
+^(.*):([0-9]*):([0-9]*): invalid operation: .* [(]variable of type (.*)[)] has no field or method (.*)
+```
+> NOTE: expressions match errors reported by `loader` package, they differ slightly from errors reported by `go`.
+
+
+### Revision Handling
+
+When writing a generic library, consider how changes to your library code should propagate to the code your users create with it. Programmers are used to think in terms of API's as a contract between a library and the code that uses it. However, for template libraries that whole idea doesn't work. This is because the library is used by copying fragments of the source of the library through *jig* instead of using a compiled version.
+
+We suggest incorporating an exported `Revision123()` function in your code that your users should then reference in their code. Note that `123` is the number of the commit or some other number that changes whenever the library gets updated for every (even minor) change.
+
+Then when your users update your library that now contains `Revision124()`, the program that uses this library will fail to build. This missing `Revision` symbol should then be interpreted by the library users as an invitation to call `go generate` to regenerate the code, but only after they update the reference from `Revision123()` to  `Revision124()` in their code.
+
+### First and Higher order types
+
+One of the stranger things I experienced was the realization that you can have higher order types that can be recursively applied to increase or decrease the order level of the type. This sounds pretty abstract, so let's look at an example:
+
+```go
+//jig:template ObservableObservable<Foo> MergeAll
+
+// MergeAll flattens a higher order observable by merging the observables it emits.
+func (o ObservableObservableFoo) MergeAll() ObservableFoo {
+	observable := func(observe FooObserveFunc, subscribeOn Scheduler, subscriber Subscriber) {
+
+	<SNIP>
+
+	}
+	return observable
+}
+```
+> NOTE the 2nd order `ObservableObservableFoo` and the first order `ObservableFoo`
+
+The template above also matches and works for generating templates for 3rd order `ObservableObservableObservableFoo` and 2nd order `ObservableObservableFoo`. 
+
+It's not often that you need something like this, but if you do, it is great that *jig* supports this.
+
+## Generics Libraries
+
+- [Reactive eXtensions for the Go language](https://www.github.com/reactivego/rx/)
+
+```go
+	import _ "github.com/reactivego/rx"
+```
+
+- [Multicasting, multi sender/receiver, buffered channel](https://www.github.com/reactivego/channel/)
+
+```go
+	import _ "github.com/reactivego/channel"
+```
+
+## Acknowledgements
 
 I would not have been able to write *jig* without the excellent tooling of the *Go* project. *Jig* is build on top of `golang.org/x/tools/go/loader` and uses it to perform the compilation and error detection steps. The code generation feature uses standard *Go* `text/template`. The templates are generated and compiled on the fly from the code *jig* finds in the template libraries that are imported by the code under development. Error analysis and type signature matching is all done using the standard `regexp` package. 
 
@@ -354,6 +606,4 @@ I would not have been able to write *jig* without the excellent tooling of the *
 ## License
 
 This library is licensed under the terms of the MIT License. See [LICENSE](LICENSE) file in this repository for copyright notice and exact wording.
-
-[*jig*]: https://en.wikipedia.org/wiki/Jig_(tool)
 
