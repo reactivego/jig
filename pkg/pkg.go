@@ -67,7 +67,7 @@ func NewPackage(dir string) *Package {
 		},
 		generated: make(map[string]string),
 		fileset:   make(map[string]*ast.File),
-		filename:  template.Must(template.New("filename").Parse("Jig{{.Package}}{{.Name}}.go")),
+		filename:  template.Must(template.New("filename").Parse("{{.package}}.go")),
 		typemap:   make(map[string]string),
 	}
 }
