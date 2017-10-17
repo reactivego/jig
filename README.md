@@ -10,7 +10,7 @@ go get github.com/reactivego/jig
 
 *Jig* provides generics for the Go programming language. It generates idiomatic Go code from pieces of generic code written in terms of place-holder types. *Jig* is implemented as a command `jig` you run from the command-line just like `go` itself. It is designed such that it generates the minimal amount of code for an automatically detected combination of types. I call this approach *Just-in-time Generics for Go* (or **jig**) because code is generated on demand only when it is needed and not before.
 
-If you're more interested in a walkthrough of using *jig*, then check out the [Quick Start](https://github.com/reactivego/rx/doc/QUICKSTART.md). It demonstrates how to use *jig* to generate code for generics from the `rx` template library. This document will mainly focus on template library development.
+If you're more interested in a walkthrough of using *jig*, then check out the [Quick Start](https://github.com/ReactiveGo/rx/blob/master/doc/QUICKSTART.md). It demonstrates how to use *jig* to generate code for generics from the `rx` template library. This document will mainly focus on template library development.
 
 ## Table of Contents
 
