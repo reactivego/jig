@@ -41,5 +41,6 @@ var reFixableErrors = []*regexp.Regexp{
 	regexp.MustCompile("^(.*):([0-9]*):([0-9]*): invalid operation: .* [(]variable of type (.*)[)] has no field or method (.*)"),
 
 	// Errors are reported differently for Go 1.12
+	regexp.MustCompile("^(.*):([0-9]*):([0-9]*): .* undefined [(]type [*](.*) has no field or method (.*)[)]"),
 	regexp.MustCompile("^(.*):([0-9]*):([0-9]*): .* undefined [(]type (.*) has no field or method (.*)[)]"),
 }
