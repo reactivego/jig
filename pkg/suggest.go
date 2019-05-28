@@ -43,4 +43,6 @@ var reFixableErrors = []*regexp.Regexp{
 	// Errors are reported differently for Go 1.12
 	regexp.MustCompile("^(.*):([0-9]*):([0-9]*): .* undefined [(]type [*](.*) has no field or method (.*)[)]"),
 	regexp.MustCompile("^(.*):([0-9]*):([0-9]*): .* undefined [(]type (.*) has no field or method (.*)[)]"),
+	regexp.MustCompile("^(.*):([0-9]*):([0-9]*): .* [(]variable of type [*](.*)[)] .*: missing method (.*)"),
+	regexp.MustCompile("^(.*):([0-9]*):([0-9]*): .* [(]variable of type (.*)[)] .*: missing method (.*)"),
 }
