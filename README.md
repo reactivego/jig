@@ -1,24 +1,67 @@
-# jig - Just-in-time Generics for Go
+# Generics for Go
 [![](http://godoc.org/github.com/reactivego/jig?status.png)](http://godoc.org/github.com/reactivego/jig)
 
-To install *jig*, open a terminal and type:
+> A jig holds a work in a fixed location and guides a tool to manufacture a product. A jig's primary purpose therefore, is to provide repeatability, accuracy, and interchangeability in the manufacturing process. [Wikipedia](https://en.wikipedia.org/wiki/Jig_(tool)).
+
+*Just-In-time Generics* or `jig` for short, is used to generate Go code. Use the `jig` command to generate code from a generics library into a source file of a program that uses this library. The generics library is written in a type agnostic way, while the generated implementation is type safe.
+
+## Let's see how this works
+Given a library with generic templates.
+
+```go
+//jig:template <Foo>Stack
+
+type FooStack []foo
+var zeroFoo foo
+
+//jig:template <Foo>Stack Push
+
+func (s *FooStack) Push(v foo) {
+	*s = append(*s, v)
+}
+```
+
+Given some code that uses this Library.
+```go
+var stack IntStack
+stack.Push(10)
+```
+
+Running `jig` will generate the following code:
+```go
+//jig:name IntStack
+
+type IntStack []int
+var zeroInt int
+
+//jig:name IntStackPush
+
+func (s *IntStack) Push(v int) {
+	*s = append(*s, v)
+}
+
+```
+`Jig` generates idiomatic Go code from pieces of generic code written in terms of place-holder types. It is designed such that it generates the minimal amount of code for an automatically detected combination of types. I call this approach *Just-in-time Generics for Go* (or **jig**) because code is generated on demand only when it is needed and not before.
+
+## How to install `jig`
+
+To install `jig`, open a terminal and type:
 
 ```bash
 go get github.com/reactivego/jig
 ```
-> NOTE: only tested on Mac
+## Quick Start
 
-*Jig* provides generics for the Go programming language. It generates idiomatic Go code from pieces of generic code written in terms of place-holder types. *Jig* is implemented as a command `jig` you run from the command-line just like `go` itself. It is designed such that it generates the minimal amount of code for an automatically detected combination of types. I call this approach *Just-in-time Generics for Go* (or **jig**) because code is generated on demand only when it is needed and not before.
+Those who are interested in a walkthrough of using `jig`, check out the [Quick Start](QUICKSTART.md). It demonstrates how to use `jig` to generate code for generics from the `github.com/reactivego/rx/generic` template library.
 
-If you're more interested in a walkthrough of using *jig*, then check out the [Quick Start](https://github.com/ReactiveGo/rx/blob/master/doc/QUICKSTART.md). It demonstrates how to use *jig* to generate code for generics from the `rx` template library. This document will mainly focus on template library development.
+The remainder of this README will focus on writing a template library.
 
 ## Table of Contents
 
 <!-- MarkdownTOC -->
 
-- [Rationale](#rationale)
-- [Unique selling points](#unique-selling-points)
-- [What is a Jig?](#what-is-a-jig)
+- [Jig unique selling points](#jig-unique-selling-points)
+- [What is a jig?](#what-is-a-jig)
 - [Command-Line](#command-line)
 - [Directory Structure](#directory-structure)
 - [Defining Templates](#defining-templates)
@@ -42,29 +85,20 @@ If you're more interested in a walkthrough of using *jig*, then check out the [Q
 	- [Type Signature Matching](#type-signature-matching)
 	- [Revision Handling](#revision-handling)
 	- [First and Higher Order Types](#first-and-higher-order-types)
-- [Generics Libraries](#generics-libraries)
+- [Available Generics Libraries](#available-generics-libraries)
 - [Acknowledgements](#acknowledgements)
 - [License](#license)
 
 <!-- /MarkdownTOC -->
 
-## Rationale
-In the summer of 2017 when things were nice and quiet at [work](https:///simplemind.eu), I thought to myself, if there is only one thing I could add to Go, what would that be? For me the answer was generics, so I set out to find a way to add generics to Go.
+## Jig unique selling points
+- To use generics, no explicit specialization of templates is needed. Types are automatically discovered by `jig`.
+- Templates can be specialized to a specific type (e.g. `int32`, `string`, `Employee`) **or** to the *any* type (i.e. `interface{}`).
+- Compilation drives code generation to minimize the amount of code that is generated.
+- Generics templates are __working__ Go code that can be tested and build.
+- A template library is a normal Go gettable package.
 
-For more than a year, I had been working regularly in my spare time on implementing [ReactiveX](http://reactivex.io/) for Go using idiomatic strongly typed Go code. In order to do this I needed a way to write code that is independent of any particular combination of types; I needed generics. I have to confess that I'm actually not that fond of generics. Bad experiences with gibberish error messages and massive code bloat in C++ had soured me on the paradigm.
-
-I've tried more than a handful of generic programming and code generation solutions for Go. None of these were powerfull enough to satisfy my requirements. So I decided to take a stab at creating a generic programming solution for Go myself.
-
-## Unique selling points
-- No explicit specialization of templates is needed, types are automatically discovered by *jig*.
-- Templates can be specialized to a specific type (e.g. `int32`, `string`) **or** to the *any* type (i.e. `interface{}`).
-- Compilation driven code generation to minimize the amount of code generated.
-- Templates are working Go code that can be tested and build.
-- A template package is a normal Go gettable package.
-
-## What is a Jig?
-I actually thought of the name *jig* before I knew what it meant. After finding out though, I felt it was pretty appropriate. A [*jig*](https://en.wikipedia.org/wiki/Jig_(tool)) is a device used in the manufacturing of products to hold the work and to guide a tool. An example of a *jig* is when a key is duplicated; the original is used as a *jig* so the new key can have the same path as the old one.
-
+## What is a jig?
 For this project, a *jig* is defined as a working piece of code that is written in terms of place-holder types and that is then used to generate code for specific (combinations of) types.
 
 ```go
@@ -578,24 +612,23 @@ The template above also matches and works for generating templates for 3rd order
 
 It's not often that you need something like this, but if you do, it is great that *jig* supports this.
 
-## Generics Libraries
+## Available Generics Libraries
 
-- [Reactive eXtensions for the Go language](https://www.github.com/reactivego/rx/)
+- [Reactive eXtensions for the Go language](https://www.github.com/reactivego/rx/tree/master/jig)
 
 ```go
-	import _ "github.com/reactivego/rx"
+	import _ "github.com/reactivego/rx/generic"
 ```
 
-- [Multicasting, multi sender/receiver, buffered channel](https://www.github.com/reactivego/channel/)
+- [Multicast Channel](https://github.com/ReactiveGo/multicast/tree/master/generic)
 
 ```go
-	import _ "github.com/reactivego/channel"
+	import _ "github.com/reactivego/multicast/generic"
 ```
 
 ## Acknowledgements
 
-I would not have been able to write *jig* without the excellent tooling of the *Go* project. *Jig* is build on top of `golang.org/x/tools/go/loader` and uses it to perform the compilation and error detection steps. The code generation feature uses standard *Go* `text/template`. The templates are generated and compiled on the fly from the code *jig* finds in the template libraries that are imported by the code under development. Error analysis and type signature matching is all done using the standard `regexp` package. 
-
+I would not have been able to write *jig* without the excellent tooling of the *Go* project. *Jig* is build on top of `golang.org/x/tools/go/loader` and uses it to perform the compilation and error detection steps. The code generation feature uses standard *Go* `text/template`. The templates are generated and compiled on the fly from the code *jig* finds in the template libraries that are imported by the code under development. Error analysis and type signature matching is all done using the standard `regexp` package.
 
 ## License
 

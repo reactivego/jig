@@ -2,10 +2,8 @@ package main
 
 import (
 	"fmt"
-	_ "github.com/reactivego/jig/example/stack"
+	_ "github.com/reactivego/jig/example/stack/generic"
 )
-
-//jig:file stack.go
 
 func main() {
 	var s StringStack
