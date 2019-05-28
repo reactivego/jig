@@ -614,7 +614,7 @@ It's not often that you need something like this, but if you do, it is great tha
 
 ## Available Generics Libraries
 
-- [Reactive eXtensions for the Go language](https://www.github.com/reactivego/rx/tree/master/jig)
+- [Reactive eXtensions for the Go language](https://www.github.com/reactivego/rx/tree/master/generic)
 
 ```go
 	import _ "github.com/reactivego/rx/generic"
