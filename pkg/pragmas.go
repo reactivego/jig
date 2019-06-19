@@ -22,16 +22,16 @@ const jigNeeds = "//jig:needs"
 const jigEmbeds = "//jig:embeds"
 
 // jigRequiredVars contains the list of var that have to be assigned a value when for a template
-// to match pecific type signature.
+// to match a specific type signature.
 const jigRequiredVars = "//jig:required-vars"
 
 // jigEnd is the jig:end pragma that explicitly marks the end of a template.
 const jigEnd = "//jig:end"
 
 // jigFile represents comment pragma //jig:file and is used in the code that is type checked.
-// This pragma defines the template for the filenames to use when generating fragments.
+// This pragma defines a template for the filenames to use when generating fragments.
 // In the value you can use the variables{{.Package}}, {{.package}}, {{.Name}} and {{.name}}. Package is the name of
-// the package that contains the jig template being expanded and Name is the sigature of the source fragment
+// the package that contains the jig template being expanded and Name is the signature of the source fragment
 // being expanded. Capitalized variables are created via strings.Title(var) and lowecase variant are create via
 // strings.ToLower(var) allowing full control over the generated filename.
 // Examples:
