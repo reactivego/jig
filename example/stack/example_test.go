@@ -7,7 +7,8 @@ import (
 )
 
 func Example() {
-	var s StringStack
+	var s Stack
+	s.Push(42)
 	s.Push("Hello, World!")
 	s.Pop()
 	s.Top()

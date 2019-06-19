@@ -4,23 +4,23 @@
 
 package stack
 
-//jig:name StringStack
+//jig:name Stack
 
-type StringStack []string
+type Stack []interface{}
 
-var zeroString string
+var zero interface{}
 
-//jig:name StringStackPush
+//jig:name StackPush
 
-func (s *StringStack) Push(v string) {
+func (s *Stack) Push(v interface{}) {
 	*s = append(*s, v)
 }
 
-//jig:name StringStackPop
+//jig:name StackPop
 
-func (s *StringStack) Pop() (string, bool) {
+func (s *Stack) Pop() (interface{}, bool) {
 	if len(*s) == 0 {
-		return zeroString, false
+		return zero, false
 	}
 	i := len(*s) - 1
 	v := (*s)[i]
@@ -28,11 +28,11 @@ func (s *StringStack) Pop() (string, bool) {
 	return v, true
 }
 
-//jig:name StringStackTop
+//jig:name StackTop
 
-func (s *StringStack) Top() (string, bool) {
+func (s *Stack) Top() (interface{}, bool) {
 	if len(*s) == 0 {
-		return zeroString, false
+		return zero, false
 	}
 	return (*s)[len(*s)-1], true
 }
