@@ -1,6 +1,6 @@
 package main
 
-import _ "github.com/reactivego/rx"
+import _ "github.com/reactivego/rx/generic"
 
 func main() {
 	FromStrings("You!", "Gophers!", "World!").

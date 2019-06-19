@@ -1,4 +1,7 @@
+// Package stack offers a generic Stack type.
 package stack
+
+type foo int
 
 //jig:template <Foo>Stack
 

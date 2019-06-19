@@ -2,7 +2,7 @@
 
 //go:generate jig --regen
 
-package stack
+package test
 
 //jig:name StringStack
 
@@ -26,13 +26,4 @@ func (s *StringStack) Pop() (string, bool) {
 	v := (*s)[i]
 	*s = (*s)[:i]
 	return v, true
-}
-
-//jig:name StringStackTop
-
-func (s *StringStack) Top() (string, bool) {
-	if len(*s) == 0 {
-		return zeroString, false
-	}
-	return (*s)[len(*s)-1], true
 }
