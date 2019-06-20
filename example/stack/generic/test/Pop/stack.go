@@ -2,19 +2,13 @@
 
 //go:generate jig --regen
 
-package test
+package Pop
 
 //jig:name StringStack
 
 type StringStack []string
 
 var zeroString string
-
-//jig:name StringStackPush
-
-func (s *StringStack) Push(v string) {
-	*s = append(*s, v)
-}
 
 //jig:name StringStackPop
 

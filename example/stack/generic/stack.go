@@ -1,4 +1,4 @@
-// Package stack offers a generic Stack type.
+// Package stack implements a generic stack
 package stack
 
 type foo int

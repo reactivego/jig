@@ -1,2 +1,2 @@
-// Package example contains subdirectories with example programs.
+// Package example provides jig examples.
 package example
