@@ -43,6 +43,10 @@ func (p *Package) loadGeneratePragmasFromFile(file *ast.File) (messages []string
 			if strings.HasPrefix(comment.Text, jigForceCommon) {
 				p.forceCommon = true
 			}
+			// jig:no-documentation
+			if strings.HasPrefix(comment.Text, jigNoDoc) {
+				p.nodoc = true
+			}
 		}
 	}
 	return messages

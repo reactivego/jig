@@ -56,6 +56,9 @@ const jigName = "//jig:name"
 // jigForceCommon pragma instructs jig to always generate common support code.
 const jigForceCommon = "//jig:force-common-code-generation"
 
+// jigNoDoc pragma instructs jig to not include documentation in the generated code.
+const jigNoDoc = "//jig:no-doc"
+
 var (
 	reCommentPragma = regexp.MustCompile("^(//jig:[-[:word:]]+)[[:space:]]+(.+)$")
 

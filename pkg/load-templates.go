@@ -79,7 +79,7 @@ func (p *Package) LoadTemplatesFromFile(file *ast.File, ignoreSupportTemplates b
 
 // collectSources will visit all declarations in the file and collect the source for the jigs.
 func (p *Package) collectSources(jigs []*jig, file *ast.File) {
-	ast.Walk(sourceCollector{Fset: p.Fset, Snippets: jigs}, file)
+	ast.Walk(sourceCollector{Fset: p.Fset, Snippets: jigs, Nodoc: p.nodoc}, file)
 }
 
 // sourceCollector is used to visit all the nodes in an ast tree and collect
@@ -88,6 +88,7 @@ func (p *Package) collectSources(jigs []*jig, file *ast.File) {
 type sourceCollector struct {
 	Fset     *token.FileSet
 	Snippets []*jig
+	Nodoc bool
 }
 
 // Visit a specific ast node and add the source representation of
@@ -104,7 +105,17 @@ func (c sourceCollector) Visit(node ast.Node) ast.Visitor {
 
 	case *ast.GenDecl, *ast.FuncDecl:
 		for _, jig := range c.Snippets {
-			if jig.ContainsSourceRange(decl.Pos(), decl.End()) {
+			pos := decl.Pos()
+			// skip decl doc
+			if c.Nodoc {
+				if g,ok := node.(*ast.GenDecl); ok {
+					g.Doc = nil
+				}
+				if f,ok := node.(*ast.FuncDecl); ok {
+					f.Doc = nil
+				}
+			}
+			if jig.ContainsSourceRange(pos, decl.End()) {
 				var source bytes.Buffer
 				printer.Fprint(&source, c.Fset, decl)
 				jig.AddSource(source.String())

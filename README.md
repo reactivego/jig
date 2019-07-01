@@ -638,6 +638,11 @@ This **may** be useful though when you are writing a template library. Templates
 
  The pragma `jig:force-common-code-generation` **forces** the generator to generate the code **anyway** for the excluded templates. You would normally only use this to see what templates *jig* is skipping. 
 
+#### jig:no-doc
+You will probably **never** need this pragma.
+
+Use this to skip generating documentation for the code you are generating. This is practical if you are developing a template package and you want to see just the code without all the documentation getting in the way.
+
 #### jig:name
 You will **never** use this yourself.
 

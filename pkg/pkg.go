@@ -44,6 +44,9 @@ type Package struct {
 	// as such (jig:common) and templates that are marked as needed by another
 	// template but that don't have template vars themselves.
 	forceCommon bool
+
+	// nodoc removes documentation from generated sources.
+	nodoc bool
 }
 
 // NewPackage creates a package given a single directory where the source of
