@@ -51,21 +51,23 @@ type Package struct {
 func NewPackage(dir string) *Package {
 	buildConfig := build.Default
 	buildConfig.CgoEnabled = false
+
+	conf := &loader.Config{
+		TypeChecker: types.Config{Error: func(err error) {  }},
+		TypeCheckFuncBodies: func(path string) bool {
+			// only check function bodies in our own directory.
+			if path == dir {
+				return true
+			}
+			return false
+		},
+		ParserMode:  parser.ParseComments,
+		AllowErrors: true,
+		Build:       &buildConfig,
+	}
 	return &Package{
 		Dir: dir,
-		Config: &loader.Config{
-			TypeChecker: types.Config{Error: func(err error) {}},
-			TypeCheckFuncBodies: func(path string) bool {
-				// only check function bodies in our own directory.
-				if path == dir {
-					return true
-				}
-				return false
-			},
-			ParserMode:  parser.ParseComments,
-			AllowErrors: true,
-			Build:       &buildConfig,
-		},
+		Config: conf,
 		generated: make(map[string]string),
 		fileset:   make(map[string]*ast.File),
 		filename:  template.Must(template.New("filename").Parse("{{.package}}.go")),
@@ -73,13 +75,15 @@ func NewPackage(dir string) *Package {
 	}
 }
 
-// PkgSpec returns a PkgSpec instance with Path and Files correctly initialized.
-func (p *Package) PkgSpec() loader.PkgSpec {
+// PkgSpec returns PkgSpec instances with Path and Files correctly initialized.
+func (p *Package) PkgSpec() []loader.PkgSpec {
 	var files []*ast.File
 	for _, file := range p.fileset {
-		files = append(files, file)
+		if p.Name == file.Name.String() {
+			files = append(files, file)
+		}
 	}
-	return loader.PkgSpec{Path: p.Dir, Files: files}
+	return []loader.PkgSpec{ loader.PkgSpec{Path: p.Dir, Files: files} }
 }
 
 func (p *Package) Typemap() map[string]string {

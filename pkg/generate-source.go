@@ -25,9 +25,8 @@ func (p *Package) ScanForGeneratedSources(file *ast.File) {
 				kvmatch := reCommentPragma.FindStringSubmatch(comment.Text)
 				if len(kvmatch) == 3 {
 					if kvmatch[1] == jigName {
-						path := p.Filepath(file)
-						p.generated[kvmatch[2]] = path
-						p.fileset[path] = file
+						p.generated[kvmatch[2]] = p.Filepath(file)
+						p.AddFile(file)
 					}
 				}
 			}

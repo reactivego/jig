@@ -1,9 +1,5 @@
 package pkg
 
-import (
-	"golang.org/x/tools/go/loader"
-)
-
 // Check will typecheck the currently parsed package source and return all errors
 // that were found. This will also import and parse all dependencies.
 // After Check() has finished the package contains the contents of all imported
@@ -12,9 +8,9 @@ import (
 func (p *Package) Check() ([]error, error) {
 	//d := time.Now()
 
-	p.CreatePkgs = []loader.PkgSpec{p.PkgSpec()}
+	p.CreatePkgs = p.PkgSpec()
 
-	// Load the program, type checking it in the process.§
+	// Load the program, type checking it in the process.
 	prog, err := p.Load()
 	if err != nil {
 		return nil, err

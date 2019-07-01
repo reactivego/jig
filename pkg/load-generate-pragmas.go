@@ -8,10 +8,11 @@ import (
 )
 
 func (p *Package) LoadGeneratePragmas() (messages []string) {
-	pkgInfo := p.PkgSpec()
-	for _, file := range pkgInfo.Files {
-		msgs := p.loadGeneratePragmasFromFile(file)
-		messages = append(messages, msgs...)
+	for _, pkgInfo := range p.PkgSpec() {
+		for _, file := range pkgInfo.Files {
+			msgs := p.loadGeneratePragmasFromFile(file)
+			messages = append(messages, msgs...)
+		}
 	}
 	return messages
 }

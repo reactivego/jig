@@ -3,6 +3,7 @@ package pkg
 import (
 	"log"
 	"path/filepath"
+	"strings"
 )
 
 // ParseDir will add .go files found in the package directory to the internal list of files.
@@ -22,9 +23,20 @@ func (p *Package) ParseDir() error {
 			log.Fatal(err)
 		}
 
-		// Get the package name from the first file that is parsed.
+		// Get the package name from the first package name stored in the files.
+		// Prefer package name without "_test" suffix, because those are external
+		// test packages that import the package itself to simulate external use.
+		// External packages are not really any good for guiding our template
+		// expansion.
+		newName := file.Name.String()
 		if p.Name == "" {
-			p.Name = file.Name.String()
+		 	p.Name = newName
+		} else {
+			if p.Name != newName {
+				if strings.HasSuffix(p.Name, "_test") {
+					p.Name = newName
+				}
+			}
 		}
 		// TODO else check that the packageName is the same as the previous one!!
 
