@@ -1,7 +1,13 @@
 # Generics for Go
 [![](http://godoc.org/github.com/reactivego/generics?status.png)](http://godoc.org/github.com/reactivego/generics)
 
-The `jig` command [cmd/jig](cmd/jig) provides Generics for Go. It generates Go code by expanding templates from a generics library. A template is a piece of generic code with type place-holders. Template expansion then replaces type place-holders with concrete types.
+Generics for Go generates strongly typed Go code by expanding generic templates from a library.
+
+A template is a piece of generic code with type place-holders. Template expansion then replaces type place-holders with concrete types. This creates a strongly typed version of a generic algorithm.
+
+Because generics are not supported by Go, a [tool](cmd/jig) to generate code is needed. Install it as follows:
+
+`go get github.com/reactivego/generics/cmd/jig`.
 
 For example, given a generic stack library with two templates that use type `foo` as a type place-holder.
 
