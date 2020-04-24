@@ -1,4 +1,4 @@
-# Just in time Generics
+# Command jig supports Generics for Go
 [![](http://godoc.org/github.com/reactivego/generics/cmd/jig?status.png)](http://godoc.org/github.com/reactivego/generics/cmd/jig)
 
 Generics are not supported directly by Go. A code generator tool is needed. `Jig` generates strongly typed code from generic templates. It builds a program and uses compile errors to figure out what code to generate.
@@ -702,7 +702,7 @@ It's not often that you need something like this, but if you do, it is great tha
 	import _ "github.com/reactivego/rx/generic"
 ```
 
-- [Multicast Channel](https://github.com/ReactiveGo/multicast/tree/master/generic)
+- [Multicast Channel](https://github.com/reactivego/multicast/tree/master/generic)
 
 ```go
 	import _ "github.com/reactivego/multicast/generic"
@@ -714,5 +714,5 @@ I would not have been able to write *jig* without the excellent tooling of the *
 
 ## License
 
-This library is licensed under the terms of the MIT License. See [LICENSE](LICENSE) file in this repository for copyright notice and exact wording.
+This library is licensed under the terms of the MIT License. See [LICENSE](../../LICENSE) file in this repository for copyright notice and exact wording.
 
