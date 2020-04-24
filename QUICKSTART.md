@@ -1,6 +1,6 @@
 # Quick Start
 
-In this Quick Start you will learn to write a minimal program using both **`jig`** ([Generics for Go](https://github.com/reactivego/jig)) and the generics library **`rx`** ([Reactive eXtensions for Go](https://github.com/reactivego/rx)). The purpose of this is to showcase using a generics library in Go.
+In this Quick Start you will learn to write a minimal program using both **`jig`** ([Generics for Go](https://github.com/reactivego/generics)) and the generics library **`rx`** ([Reactive eXtensions for Go](https://github.com/reactivego/rx)). The purpose of this is to showcase using a generics library in Go.
 ## Dependencies
 
 You must to have Go [installed](https://golang.org/doc/install#install).
@@ -11,7 +11,7 @@ You must to have Go [installed](https://golang.org/doc/install#install).
 To install `jig` and `rx`, open a terminal and from the command-line and run:
 
 ```bash
-$ go get github.com/reactivego/jig
+$ go get github.com/reactivego/generics/cmd/jig
 $ go get github.com/reactivego/rx
 ```
 

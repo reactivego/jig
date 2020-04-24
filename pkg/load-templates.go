@@ -8,7 +8,7 @@ import (
 	"go/token"
 	"strings"
 
-	"github.com/reactivego/jig/templ"
+	"github.com/reactivego/generics/templ"
 )
 
 // LoadTemplates is used to go through all the ast.File(s) in all the

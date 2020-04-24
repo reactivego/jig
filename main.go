@@ -6,15 +6,15 @@
 //	-m, --missing   Only generate code that is missing
 //	-v, --verbose   Print details of what jig is doing
 //
-// For details on usage and background information see https://github.com/reactivego/jig/
+// For details on usage and background information see https://github.com/reactivego/generics/
 package main
 
 import (
 	"fmt"
 	"os"
 
-	"github.com/reactivego/jig/pkg"
-	"github.com/reactivego/jig/templ"
+	"github.com/reactivego/generics/pkg"
+	"github.com/reactivego/generics/templ"
 
 	"github.com/spf13/pflag"
 )
@@ -24,6 +24,8 @@ func main() {
 }
 
 func jigMain() int {
+	fmt.Println("MODIFIED(2020-04-21.0)")
+
 	// Flag handling...
 	var clean, regen, missing, verbose bool
 	pflag.Usage = func() {
