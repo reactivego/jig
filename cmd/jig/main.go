@@ -24,8 +24,6 @@ func main() {
 }
 
 func jigMain() int {
-	fmt.Println("MODIFIED(2020-04-21.0)")
-
 	// Flag handling...
 	var clean, regen, missing, verbose bool
 	pflag.Usage = func() {

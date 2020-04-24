@@ -1,4 +1,4 @@
-module github.com/reactivego/jig
+module github.com/reactivego/generics
 
 go 1.11
 
