@@ -8,7 +8,6 @@ Generics are not supported directly by Go. A code generator tool is needed. `Jig
 <!-- MarkdownTOC -->
 
 - [How to install `jig`](#how-to-install-jig)
-- [Quick Start](#quick-start)
 - [What is a jig?](#what-is-a-jig) 
 - [How does `jig` work?](#how-does-jig-work) 
 - [Command-Line](#command-line)
@@ -47,11 +46,7 @@ To install `jig`, open a terminal and type:
 ```bash
 go get github.com/reactivego/generics/cmd/jig
 ```
-## Quick Start
-
-Those who are interested in a walkthrough of using `jig`, check out the [Quick Start](QUICKSTART.md). It demonstrates how to use `jig` to generate code for generics from the `github.com/reactivego/rx/generic` template library.
-
-The remainder of this document will focus on writing a template library.
+This document will focus on writing template libraries.
 
 ## What is a jig?
 > A jig holds a work in a fixed location and guides a tool to manufacture a product. A jig's primary purpose therefore, is to provide repeatability, accuracy, and interchangeability in the manufacturing process. [Wikipedia](https://en.wikipedia.org/wiki/Jig_(tool)).
