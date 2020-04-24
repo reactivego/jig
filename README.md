@@ -9,7 +9,11 @@ Because generics are not supported by Go, a [tool](cmd/jig) to generate code is 
 
 `go get github.com/reactivego/generics/cmd/jig`.
 
-For example, given a generic stack library with two templates that use type `foo` as a type place-holder.
+## Example
+
+Let's implement a generic stack.
+
+We start with two templates that use `foo` as a type place-holder:
 
 ```go
 package stack
@@ -27,7 +31,13 @@ func (s *FooStack) Push(v foo) {
 	*s = append(*s, v)
 }
 ```
-Note that this library contains **valid** Go code that compiles normally. It has been made available online and can be imported from `github.com/reactivego/generics/example/stack/generic`.
+Note that this library contains **valid** Go code that compiles normally.
+
+This code is [online](example/stack/generic) and can be imported as follows:
+
+```go
+import _ "github.com/reactivego/generics/example/stack/generic"
+```
 
 Given some code that uses this Library in a file `main.go`.
 
