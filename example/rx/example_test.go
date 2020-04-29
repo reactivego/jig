@@ -4,11 +4,11 @@ import "github.com/reactivego/rx"
 
 /*
 Use the generics from package "github.com/reactivego/rx" and generate
-function FromStrings and method MapString and Println by running the
+function FromString and method MapString and Println by running the
 jig command.
 */
 func Example_generic() {
-	FromStrings("You!", "Gophers!", "World!").
+	FromString("You!", "Gophers!", "World!").
 		MapString(func(x string) string {
 			return "Hello, " + x
 		}).

@@ -133,36 +133,30 @@ Now that you have your [`main.go`](../example/rx/main.go) file open in your edit
 If you would now go to the command-line and run `jig` it would do the following:
 
 1. Import `github.com/reactivego/rx/generic` to access the generics in that library.
-2. Optionally specify the file to generate the code into.
-3. Generate `FromStrings` by specializing the template `From<Foo>s` from the library on type `string`. Generate dependencies of `FromStrings` like the type `ObservableString` that is returned by `FromStrings`.
-4. Generate the `MapString` method of `ObservableString` by specializing the template `Observable<Foo> Map<Bar>` for `Foo` as type `string` and `Bar` (the type to map to) also as type `string`.
-5. Map function from `string` to `string` just concatenates two strings and returns the result.
-6. Print every string returned by the Map function.
-7. The output you can expect when you run the program.
+2. Generate `FromString` by specializing the template `From<Foo>` from the library on type `string`. Generate dependencies of `FromString` like the type `ObservableString` that is returned by `FromString`.
+3. Generate the `MapString` method of `ObservableString` by specializing the template `Observable<Foo> Map<Bar>` for `Foo` as type `string` and `Bar` (the type to map to) also as type `string`.
+4. Map function from `string` to `string` just concatenates two strings and returns the result.
+5. Print every string returned by the Map function.
+6. The output you can expect when you run the program.
 
 Now actually go to the command-line and run `jig -v`. Use the verbose flag `-v` because otherwise `jig` will be silent.
 
 ```bash
 $ jig -v
+found 126 templates in package "rx" (github.com/reactivego/rx/generic)
 found 16 templates in package "multicast" (github.com/reactivego/multicast/generic)
-found 114 templates in package "rx" (github.com/reactivego/rx/generic)
-generating "FromStrings"
-  StringObserveFunc
-  ObservableString
-  StringObserver
-  CreateString
-  FromSliceString
-  FromStrings
-generating "Scheduler"
+generating "FromString"
   Scheduler
-generating "Subscriber"
   Subscriber
+  StringObserveFunc
+  zeroString
+  ObservableString
+  FromSliceString
+  FromString
 generating "ObservableString MapString"
   ObservableString MapString
 generating "ObservableString Println"
-  NewScheduler
-  SubscribeOptions
-  ObservableString Subscribe
+  Schedulers
   ObservableString Println
 writing file "rx.go"
 ```

@@ -24,6 +24,11 @@ type Subscriber subscriber.Subscriber
 // Subscription is an alias for the subscriber.Subscription interface type.
 type Subscription subscriber.Subscription
 
+// NewSubscriber creates a new subscriber.
+func NewSubscriber() Subscriber {
+	return subscriber.New()
+}
+
 //jig:name StringObserveFunc
 
 // StringObserveFunc is the observer, a function that gets called whenever the
@@ -33,6 +38,8 @@ type Subscription subscriber.Subscription
 // When done is true and the err argument is nil, then the observable has
 // completed normally.
 type StringObserveFunc func(next string, err error, done bool)
+
+//jig:name zeroString
 
 var zeroString string
 
@@ -46,13 +53,13 @@ type ObservableString func(StringObserveFunc, Scheduler, Subscriber)
 
 // FromSliceString creates an ObservableString from a slice of string values passed in.
 func FromSliceString(slice []string) ObservableString {
-	observable := func(observe StringObserveFunc, subscribeOn Scheduler, subscriber Subscriber) {
+	observable := func(observe StringObserveFunc, scheduler Scheduler, subscriber Subscriber) {
 		i := 0
-		subscribeOn.ScheduleRecursive(func(self func()) {
-			if !subscriber.Canceled() {
+		runner := scheduler.ScheduleRecursive(func(self func()) {
+			if subscriber.Subscribed() {
 				if i < len(slice) {
 					observe(slice[i], nil, false)
-					if !subscriber.Canceled() {
+					if subscriber.Subscribed() {
 						i++
 						self()
 					}
@@ -61,14 +68,15 @@ func FromSliceString(slice []string) ObservableString {
 				}
 			}
 		})
+		subscriber.OnUnsubscribe(runner.Cancel)
 	}
 	return observable
 }
 
-//jig:name FromStrings
+//jig:name FromString
 
-// FromStrings creates an ObservableString from multiple string values passed in.
-func FromStrings(slice ...string) ObservableString {
+// FromString creates an ObservableString from multiple string values passed in.
+func FromString(slice ...string) ObservableString {
 	return FromSliceString(slice)
 }
 
@@ -92,20 +100,19 @@ func (o ObservableString) MapString(project func(string) string) ObservableStrin
 
 //jig:name Schedulers
 
-func ImmediateScheduler() Scheduler	{ return scheduler.Immediate }
+func TrampolineScheduler() Scheduler	{ return scheduler.Trampoline }
 
-func CurrentGoroutineScheduler() Scheduler	{ return scheduler.CurrentGoroutine }
-
-func NewGoroutineScheduler() Scheduler	{ return scheduler.NewGoroutine }
+func GoroutineScheduler() Scheduler	{ return scheduler.Goroutine }
 
 //jig:name ObservableStringPrintln
 
 // Println subscribes to the Observable and prints every item to os.Stdout
 // while it waits for completion or error. Returns either the error or nil
 // when the Observable completed normally.
+// Println is performed on the Trampoline scheduler.
 func (o ObservableString) Println() (err error) {
-	subscriber := subscriber.New()
-	scheduler := CurrentGoroutineScheduler()
+	subscriber := NewSubscriber()
+	scheduler := TrampolineScheduler()
 	observer := func(next string, e error, done bool) {
 		if !done {
 			fmt.Println(next)
@@ -114,6 +121,7 @@ func (o ObservableString) Println() (err error) {
 			subscriber.Unsubscribe()
 		}
 	}
+	subscriber.OnWait(scheduler.Wait)
 	o(observer, scheduler, subscriber)
 	subscriber.Wait()
 	return
