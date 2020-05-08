@@ -4,7 +4,7 @@
 
 [![](http://godoc.org/github.com/reactivego/generics/cmd/jig?status.png)](http://godoc.org/github.com/reactivego/generics/cmd/jig)
 
-`jig` generates statically typed code from generic functions and generic datatypes. The generated code can then be build with Go 1. The generated code can then be build with Go 1. Go version 1 will never support generics directly. Go version 2 however, most likely will. Eventually when Go 2 arrives with full support for generics, it should be fairly easy to switch over.
+`jig` generates statically typed code from generic functions and generic datatypes. The generated code can then be build with Go 1. Go version 1 will never support generics directly. Go version 2 however, most likely will. Eventually when Go 2 arrives with full support for generics, it should be fairly easy to switch over.
 
 `Jig` is a code generator that uses a build/generate cycle to steer the generation of code. It repeatedly builds a program and uses compile errors to figure out what code to generate.
 
