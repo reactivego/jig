@@ -14,15 +14,12 @@ import (
 //jig:name Scheduler
 
 // Scheduler is used to schedule tasks to support subscribing and observing.
-type Scheduler scheduler.Scheduler
+type Scheduler = scheduler.Scheduler
 
 //jig:name Subscriber
 
 // Subscriber is an alias for the subscriber.Subscriber interface type.
-type Subscriber subscriber.Subscriber
-
-// Subscription is an alias for the subscriber.Subscription interface type.
-type Subscription subscriber.Subscription
+type Subscriber = subscriber.Subscriber
 
 // NewSubscriber creates a new subscriber.
 func NewSubscriber() Subscriber {
@@ -49,10 +46,10 @@ var zeroString string
 // function, scheduler and an subscriber.
 type ObservableString func(StringObserveFunc, Scheduler, Subscriber)
 
-//jig:name FromSliceString
+//jig:name FromString
 
-// FromSliceString creates an ObservableString from a slice of string values passed in.
-func FromSliceString(slice []string) ObservableString {
+// FromString creates an ObservableString from multiple string values passed in.
+func FromString(slice ...string) ObservableString {
 	observable := func(observe StringObserveFunc, scheduler Scheduler, subscriber Subscriber) {
 		i := 0
 		runner := scheduler.ScheduleRecursive(func(self func()) {
@@ -71,13 +68,6 @@ func FromSliceString(slice []string) ObservableString {
 		subscriber.OnUnsubscribe(runner.Cancel)
 	}
 	return observable
-}
-
-//jig:name FromString
-
-// FromString creates an ObservableString from multiple string values passed in.
-func FromString(slice ...string) ObservableString {
-	return FromSliceString(slice)
 }
 
 //jig:name ObservableStringMapString
@@ -100,9 +90,13 @@ func (o ObservableString) MapString(project func(string) string) ObservableStrin
 
 //jig:name Schedulers
 
-func TrampolineScheduler() Scheduler	{ return scheduler.Trampoline }
+func TrampolineScheduler() Scheduler {
+	return scheduler.Trampoline
+}
 
-func GoroutineScheduler() Scheduler	{ return scheduler.Goroutine }
+func GoroutineScheduler() Scheduler {
+	return scheduler.Goroutine
+}
 
 //jig:name ObservableStringPrintln
 

@@ -691,16 +691,16 @@ It's not often that you need something like this, but if you do, it is great tha
 
 ## Available Generics Libraries
 
-- [Reactive eXtensions for the Go language](https://www.github.com/reactivego/rx/tree/master/generic)
+### [Reactive Extensions](https://www.github.com/reactivego/rx/tree/master/generic)
 
 ```go
-	import _ "github.com/reactivego/rx/generic"
+import _ "github.com/reactivego/rx/generic"
 ```
 
-- [Multicast Channel](https://github.com/reactivego/multicast/tree/master/generic)
+### [Multicast Channel](https://github.com/reactivego/multicast/tree/master/generic)
 
 ```go
-	import _ "github.com/reactivego/multicast/generic"
+import _ "github.com/reactivego/multicast/generic"
 ```
 
 ## Acknowledgements

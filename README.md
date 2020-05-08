@@ -118,7 +118,7 @@ $ subl main.go
 > NOTE we use `subl` to open *Sublime Text*, but any text editor will do.
 
 ### Write Code
-Now that you have your [`main.go`](../example/rx/main.go) file open in your editor of choice, type the following code:
+Now that you have your [`main.go`](example/rx/main.go) file open in your editor of choice, type the following code:
 
 ![Hello World Program](doc/helloworld.png)
 
@@ -163,7 +163,7 @@ Hello, World!
 ```
 
 Success! `jig` generated the code into the file `rx.go` and we were able to run the program.
-Turns out the generated file [`rx.go`](example/rx/rx.go) contains less than 250 lines of code.
+Turns out the generated file [`rx.go`](example/rx/rx.go) contains less than 125 lines of code.
 
 If you add additional code to the program that uses different generics of the `rx` library, then you should run `jig` again to generate specializations of those generics.
 
