@@ -1,13 +1,17 @@
-# Command jig supports Generics for Go
+# jig
+
+    $ go get github.com/reactivego/generics/cmd/jig
+
 [![](http://godoc.org/github.com/reactivego/generics/cmd/jig?status.png)](http://godoc.org/github.com/reactivego/generics/cmd/jig)
 
-Generics are not supported directly by Go. A code generator tool is needed. `Jig` generates strongly typed code from generic templates. It builds a program and uses compile errors to figure out what code to generate.
+`jig` generates statically typed code from generic functions and generic datatypes. The generated code can then be build with Go 1. The generated code can then be build with Go 1. Go version 1 will never support generics directly. Go version 2 however, most likely will. Eventually when Go 2 arrives with full support for generics, it should be fairly easy to switch over.
+
+`Jig` is a code generator that uses a build/generate cycle to steer the generation of code. It repeatedly builds a program and uses compile errors to figure out what code to generate.
 
 ## Table of Contents
 
 <!-- MarkdownTOC -->
 
-- [How to install `jig`](#how-to-install-jig)
 - [What is a jig?](#what-is-a-jig) 
 - [How does `jig` work?](#how-does-jig-work) 
 - [Command-Line](#command-line)
@@ -38,15 +42,6 @@ Generics are not supported directly by Go. A code generator tool is needed. `Jig
 - [License](#license)
 
 <!-- /MarkdownTOC -->
-
-## How to install `jig`
-
-To install `jig`, open a terminal and type:
-
-```bash
-go get github.com/reactivego/generics/cmd/jig
-```
-This document will focus on writing template libraries.
 
 ## What is a jig?
 > A jig holds a work in a fixed location and guides a tool to manufacture a product. A jig's primary purpose therefore, is to provide repeatability, accuracy, and interchangeability in the manufacturing process. [Wikipedia](https://en.wikipedia.org/wiki/Jig_(tool)).
@@ -100,7 +95,7 @@ By default *jig* is quiet unless it finds an error. To make *jig* more chatty us
 The templates *jig* uses are picked up from the packages that are imported by your code. So if your code is not importing a library, then *jig* will not be able to find it. So it is not enough to use `go get <template library>` to install the library in your `GOPATH`, you will also need to `import _ "<template library>"` it in your code. To see what templates *jig* is finding and where, run `jig --verbose` or more succinctly `jig -v`. So, like this:
 
 ```bash
-$ jig --v
+$ jig -v
 removing file "stack.go"
 found 4 jig templates in package "github.com/reactivego/generics/example/stack/generic" 
 ...
