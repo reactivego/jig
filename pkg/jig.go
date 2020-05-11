@@ -5,7 +5,7 @@ import (
 	"go/token"
 	"strings"
 
-	"github.com/reactivego/generics/templ"
+	"github.com/reactivego/jig/templ"
 )
 
 // jig contains everything from templ.Template and transient stuff not needed after analyzing all ast files.

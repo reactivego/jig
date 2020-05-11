@@ -3,7 +3,7 @@ package Pop
 import (
 	"fmt"
 
-	_ "github.com/reactivego/generics/example/stack/generic"
+	_ "github.com/reactivego/jig/example/stack/generic"
 )
 
 func Example() {

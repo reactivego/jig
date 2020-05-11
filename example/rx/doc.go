@@ -1,2 +1,2 @@
-// Package rx provides an example of using Reactive Extensions (ReactiveX) for Go.
+// Package rx provides an example of using Reactive Extensions for Go.
 package rx
