@@ -757,17 +757,13 @@ In previous sections, we've been looking at the mosts commonly used aspects of *
 
 ### Using jig inside a Template Library Package
 
-In order for template code to compile, it depends on code that could potentially also be generated with *jig*. An example can be found in `rx` where to implement the template code for mapping from one observable to another you need to have both type `ObservableFoo` as well as type `ObservableBar` available. However `ObservableFoo` is the template and `ObservableBar` is just an instance of that template for the `bar` type.
+In order for template code to compile, it depends on code that could potentially also be generated with *jig*. An example can be found in `github.com/reactivego/rx/generic` where to implement the template code for mapping from one observable to another you need to have both type `ObservableFoo` as well as type `ObservableBar` available. However, `ObservableFoo` is the template and `ObservableBar` is just an instance of that template for the `bar` type.
 
 Fortunately, *jig* has been designed to fully support this. You just need to take some precautions by instructing the generator side of *jig* exactly what to generate.
 
 The following code fragment shows how the `rx` library is configured for internal *jig* code generation.
 ```go
 package rx
-
-// Code generated to make this rx package buildable should be written to rx.go
-
-//jig:file rx.go
 
 // foo is the first metasyntactic type. Use the jig:type pragma to tell jig that
 // Foo is the reference type name for actual type foo. Needed because we're
@@ -786,7 +782,6 @@ type foo int
 type bar int
 ```
 > *NOTE*
-> - `jig:file` is used to tell jig to write code to a file with name `rx.go`.
 > - `jig:type` to tell jig there are 2 unexported types `foo` and `bar` that are referred to by names `Foo` and `Bar`.
 
 ### Type Signature Matching
