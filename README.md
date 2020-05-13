@@ -11,7 +11,6 @@
 <!-- MarkdownTOC -->
 
 - [Install](#install)
-- [Usage](#usage)
 - [Getting Started](#getting-started)
 	- [Mixing Data Types](#mixing-data-types)
 - [How does `jig` work?](#how-does-jig-work) 
@@ -50,7 +49,6 @@
 ```bash
 $ go get github.com/reactivego/jig
 ```
-## Usage
 ```bash
 $ jig -h
 Usage of jig [flags] [<dir>]:
