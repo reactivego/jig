@@ -782,7 +782,7 @@ type foo int
 type bar int
 ```
 > *NOTE*
-> - `jig:type` to tell jig there are 2 unexported types `foo` and `bar` that are referred to by names `Foo` and `Bar`.
+> - `jig:type` tells jig about unexported types `foo` and `bar`, referenced by names `Foo` and `Bar` respectively.
 
 ### Type Signature Matching
 
