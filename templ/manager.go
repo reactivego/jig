@@ -63,7 +63,7 @@ func (tpls *templatemanager) Add(t Generic, source string) error {
 
 	// Name template used for generated source fragment names as value in //jig:name pragma and for use in source file name.
 	nametpl := t.identifier
-	// e.g. "ObservableFooMapBar" -> "Observable{{.T}}Map{{.U}}"
+	// e.g. "ObservableFoo_MapBar" -> "Observable{{.T}}_Map{{.U}}"
 	for i, varname := range t.Vars {
 		nametpl = strings.Replace(nametpl, varname, fmt.Sprintf("{{.%s}}", stdVar[i]), -1)
 	}

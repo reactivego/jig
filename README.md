@@ -638,7 +638,7 @@ As mentioned, the use of this pragma can speed-up code generation considerably, 
 
 In corner cases, *jig* also decides between two equally viable matches based on the template variables already discovered. So `jig:needs` clauses can sometimes influence which template is used in a subtle way.
 
-Note, you can't specify a needed template that is only a partial match. Say you need a type e.g. TimeStamp<Foo>Observer. Unless there is an actual template TimeStamp<Foo>Observer it will be reported as 'missing'. This is something typically encountered when you introduce a new type in your template definition. What you actually would like to specify is <TimeStamp<Foo>>Observer, but that is not supported yet by jig.
+Note, you can't specify a needed template that is only a partial match. Say you need a type e.g. `TimeStamp<Foo>Observer`. Unless there is an actual template `TimeStamp<Foo>Observer` it will be reported as 'missing' when jig tries to generate code for it. This is something typically encountered when you introduce a new type in your template definition. What you actually would like to specify is `<TimeStamp<Foo>>Observer`, but that is not supported yet by jig.
 
 #### jig:embeds
 The pragma `jig:embeds` can be used to tell jig that a certain type embeds other types. Generating a method for an embedded type could satisfy a missing method that is needed but that the curent type does not specify a template for. Code generation will then specialize the template code for the embedded type.

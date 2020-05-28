@@ -34,7 +34,7 @@ type Generic struct {
 
 	// identifier is the generic name with all spaces and angle brackets around
 	// the template variable names removed.
-	// e.g. "ObservableFooMapBar"
+	// e.g. "ObservableFoo_MapBar"
 	identifier string
 	// signature is a regular expression to which type signatures are atempted to be
 	// matched in order to find out if this generic is compatible with the type signature.
