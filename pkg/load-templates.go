@@ -11,14 +11,14 @@ import (
 	"github.com/reactivego/jig/templ"
 )
 
-// LoadTemplates is used to go through all the ast.File(s) in all the
+// LoadGenerics is used to go through all the ast.File(s) in all the
 // packages and then turn all jigs that are found in those files into templates.
-func (p *Package) LoadTemplates(tplr templ.Templater) (messages []string, err error) {
+func (p *Package) LoadGenerics(tplr templ.Specializer) (messages []string, err error) {
 	for _, pkgInfo := range p.allPackages {
 		ignoreSupportTemplates := !p.forceCommon && p.Dir == pkgInfo.Pkg.Path()
 		var jigs []*jig
 		for _, file := range pkgInfo.Files {
-			jigs = append(jigs, p.LoadTemplatesFromFile(file, ignoreSupportTemplates)...)
+			jigs = append(jigs, p.LoadGenericsFromFile(file, ignoreSupportTemplates)...)
 		}
 		if jigs == nil {
 			continue
@@ -26,10 +26,12 @@ func (p *Package) LoadTemplates(tplr templ.Templater) (messages []string, err er
 		if !ignoreSupportTemplates {
 			p.transformCommonIntoNeeds(jigs)
 		}
-		// Now all jigs have been read, so we can now tell every jig to define their template.
-		err = p.defineTemplates(tplr, jigs)
-		if err != nil {
-			return messages, err
+		// All jigs are read; for every Jig add Generic+Source to Specializer.
+		for _, jig := range jigs {
+			err = tplr.Add(jig.Generic, jig.Source)
+			if err != nil {
+				return messages, err
+			}
 		}
 		var msg string
 		if !ignoreSupportTemplates {
@@ -43,11 +45,11 @@ func (p *Package) LoadTemplates(tplr templ.Templater) (messages []string, err er
 	return messages, nil
 }
 
-// LoadTemplatesFromFile will parse comments in a file to find //jig:template entries that
+// LoadGenericsFromFile will parse comments in a file to find //jig:template entries that
 // declare templates and use that to determine source range of the associated template definition.
 // Then walk the file ast and extract source in the ranges determined before and add it to the
 // correct jig.
-func (p *Package) LoadTemplatesFromFile(file *ast.File, ignoreSupportTemplates bool) []*jig {
+func (p *Package) LoadGenericsFromFile(file *ast.File, ignoreSupportTemplates bool) []*jig {
 	var jigs []*jig
 	var jig *jig
 	for _, cgroup := range file.Comments {
@@ -140,15 +142,4 @@ func (p *Package) transformCommonIntoNeeds(jigs []*jig) {
 		}
 		jig.Needs = append(common, jig.Needs...)
 	}
-}
-
-// defineTemplates will add a template for every jig.
-func (p *Package) defineTemplates(tplr templ.Templater, jigs []*jig) error {
-	for _, jig := range jigs {
-		err := tplr.Add(jig.Template, jig.Source)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }

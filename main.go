@@ -76,7 +76,7 @@ func jigMain() int {
 
 	var (
 		errors []error
-		tplr   templ.Templater
+		tplr   templ.Specializer
 	)
 
 	// As long as files are being generated we are still fixing code.
@@ -102,8 +102,8 @@ func jigMain() int {
 		if tplr == nil {
 			// Look for our //jigs: comment pragmas and import
 			// any templates declared that way.
-			tplr = templ.NewTemplater()
-			messages, err := pkg.LoadTemplates(tplr) // ~2ms
+			tplr = templ.NewSpecializer()
+			messages, err := pkg.LoadGenerics(tplr) // ~2ms
 			if printedError(verbose, messages, err) {
 				return 1
 			}

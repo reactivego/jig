@@ -3,7 +3,7 @@ package pkg
 // Check will typecheck the currently parsed package source and return all errors
 // that were found. This will also import and parse all dependencies.
 // After Check() has finished the package contains the contents of all imported
-// packages and therefore LoadTemplates() may be caled to locate and load templates
+// packages and therefore LoadGenerics() may be caled to locate and load templates
 // from those imported packages.
 func (p *Package) Check() ([]error, error) {
 	//d := time.Now()

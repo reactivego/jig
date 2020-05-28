@@ -10,7 +10,7 @@ import (
 
 // jig contains everything from templ.Template and transient stuff not needed after analyzing all ast files.
 type jig struct {
-	templ.Template
+	templ.Generic
 	Pos    token.Pos
 	End    token.Pos
 	Source string
