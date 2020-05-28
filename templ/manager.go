@@ -52,7 +52,7 @@ func (tpls *templatemanager) Add(t Generic, source string) error {
 	// e.g. Observable<Int> Map<Bar> becomes ObservableIntMapBar
 	t.identifier = strings.Map(func(r rune) rune {
 		if unicode.IsSpace(r) {
-			return -1
+			return '_'
 		}
 		return r
 	}, t.Name)
