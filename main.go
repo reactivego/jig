@@ -29,7 +29,7 @@ func main() {
 
 func jigMain() int {
 	// Flag handling...
-	var clean, forceregen, missing, verbose bool
+	var clean, forceregen, missing, verbose, nodoc bool
 	pflag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s [flags] [<dir>]:\n", os.Args[0])
 		pflag.PrintDefaults()
@@ -38,6 +38,7 @@ func jigMain() int {
     pflag.BoolVarP(&forceregen, "regen", "r", false, "Force regeneration of all code by jig (default)")
 	pflag.BoolVarP(&missing, "missing", "m", false, "Only generate code that is missing")
 	pflag.BoolVarP(&verbose, "verbose", "v", false, "Print details of what jig is doing")
+	pflag.BoolVarP(&nodoc, "nodoc","n", false, "No documentation in generated files")
 	pflag.Parse()
 
 	if forceregen && missing {
@@ -52,7 +53,8 @@ func jigMain() int {
 
 	// Create a package that will read and write files from the given dir.
 	pkg := pkg.NewPackage(dir)
-
+	pkg.Nodoc = nodoc
+	
 	// Parse all files currently in the package directory.
 	err := pkg.ParseDir()
 	if printedError(verbose, nil, err) {

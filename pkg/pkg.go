@@ -21,6 +21,9 @@ type Package struct {
 	// Name is the package name found in the first source file that is scanned from the package dir.
 	Name string
 
+	// Nodoc removes documentation from generated sources.
+	Nodoc bool
+
 	// generated maps source fragment name to filepath
 	generated map[string]string
 
@@ -44,9 +47,6 @@ type Package struct {
 	// as such (jig:common) and templates that are marked as needed by another
 	// template but that don't have template vars themselves.
 	forceCommon bool
-
-	// nodoc removes documentation from generated sources.
-	nodoc bool
 }
 
 // NewPackage creates a package given a single directory where the source of

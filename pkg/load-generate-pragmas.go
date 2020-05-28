@@ -45,7 +45,7 @@ func (p *Package) loadGeneratePragmasFromFile(file *ast.File) (messages []string
 			}
 			// jig:no-documentation
 			if strings.HasPrefix(comment.Text, jigNoDoc) {
-				p.nodoc = true
+				p.Nodoc = true
 			}
 		}
 	}
