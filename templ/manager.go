@@ -210,8 +210,7 @@ func (tpls *templatemanager) GenerateCodeForType(pkg PackageWriter, signature st
 		msg, err := tpls.Specialize(pkg, apply)
 		if msg != "" {
 			if len(messages) == 0 {
-				//messages = []string{fmt.Sprintf("generating %q", signature), "  " + msg}
-				messages = []string{fmt.Sprintf("generating %q %#v", signature, apply.types), "  " + msg}
+				messages = []string{fmt.Sprintf("generating %q <%s>", signature, strings.Join(apply.types,`>,<`)), "  " + msg}
 				for _, msg := range missing {
 					messages = append(messages, "  "+msg)
 				}

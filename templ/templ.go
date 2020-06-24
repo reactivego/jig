@@ -54,7 +54,7 @@ func (t Generic) sourceID() string {
 // generated source fragments to the package.
 type PackageWriter interface {
 	// Typemap is used to tell the specializer about the real type to use instead of the display type.
-	// Usefull for generaring code for non-exported types.
+	// Usefull for generating code for non-exported types.
 	// e.g. display type MyFoo maps to real type myfoo struct { ... }
 	// The display type is used in signatures e.g. NewMyFooDict() but the actual type definitions
 	// need to know about the real type myfoo
