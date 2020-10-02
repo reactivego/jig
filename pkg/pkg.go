@@ -5,6 +5,7 @@ import (
 	"go/build"
 	"go/parser"
 	"go/types"
+	"sync"
 	"text/template"
 
 	"golang.org/x/tools/go/loader"
@@ -47,16 +48,19 @@ type Package struct {
 	// as such (jig:common) and templates that are marked as needed by another
 	// template but that don't have template vars themselves.
 	forceCommon bool
+
+	// cache saves import packages for later access.
+	cache sync.Map
 }
 
 // NewPackage creates a package given a single directory where the source of
 // the package lives.
 func NewPackage(dir string) *Package {
-	buildConfig := build.Default
-	buildConfig.CgoEnabled = false
+	buildContext := build.Default
+	buildContext.CgoEnabled = false
 
 	conf := &loader.Config{
-		TypeChecker: types.Config{Error: func(err error) {  }},
+		TypeChecker: types.Config{Error: func(err error) {}},
 		TypeCheckFuncBodies: func(path string) bool {
 			// only check function bodies in our own directory.
 			if path == dir {
@@ -66,16 +70,28 @@ func NewPackage(dir string) *Package {
 		},
 		ParserMode:  parser.ParseComments,
 		AllowErrors: true,
-		Build:       &buildConfig,
+		Build:       &buildContext,
 	}
-	return &Package{
-		Dir: dir,
-		Config: conf,
+	pkg := &Package{
+		Dir:       dir,
+		Config:    conf,
 		generated: make(map[string]string),
 		fileset:   make(map[string]*ast.File),
 		filename:  template.Must(template.New("filename").Parse("{{.package}}.go")),
 		typemap:   make(map[string]string),
 	}
+	pkg.Config.FindPackage = func(ctxt *build.Context, importPath, fromDir string, mode build.ImportMode) (*build.Package, error) {
+		if bpkg, present := pkg.cache.Load(importPath); present {
+			return bpkg.(*build.Package), nil
+		} else if bpkg, err := ctxt.Import(importPath, fromDir, mode); err == nil {
+			pkg.cache.Store(importPath, bpkg)
+			return bpkg, nil
+		} else {
+			return nil, err
+		}
+	}
+
+	return pkg
 }
 
 // PkgSpec returns PkgSpec instances with Path and Files correctly initialized.
@@ -86,7 +102,7 @@ func (p *Package) PkgSpec() []loader.PkgSpec {
 			files = append(files, file)
 		}
 	}
-	return []loader.PkgSpec{ loader.PkgSpec{Path: p.Dir, Files: files} }
+	return []loader.PkgSpec{loader.PkgSpec{Path: p.Dir, Files: files}}
 }
 
 func (p *Package) Typemap() map[string]string {
