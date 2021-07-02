@@ -62,7 +62,7 @@ const jigNoDoc = "//jig:no-doc"
 var (
 	reCommentPragma = regexp.MustCompile("^(//jig:[-[:word:]]+)[[:space:]]+(.+)$")
 
-	reJigType = regexp.MustCompile("^//jig:type[[:space:]]+([[:word:]]+)[[:space:]]+([[:punct:][:word:]]+)$")
+	reJigType = regexp.MustCompile("^//jig:type[[:space:]]+([[:word:]]+)[[:space:]=]+([[:punct:][:word:]]+)$")
 
 	// Extract template variables, matches will contain [["<Foo>" "Foo"] ["<Bar>" "Bar"]]
 	reTemplateVar = regexp.MustCompile("<([[:word:]]+)>")
