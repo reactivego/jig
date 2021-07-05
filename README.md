@@ -2,7 +2,7 @@
 
     $ go get github.com/reactivego/jig
 
-[![](http://godoc.org/github.com/reactivego/jig?status.png)](http://godoc.org/github.com/reactivego/jig)
+[![Go Reference](https://pkg.go.dev/badge/github.com/reactivego/jig.svg)](https://pkg.go.dev/github.com/reactivego/jig#section-documentation)
 
 `jig` is a tool for generating source code from a generics library.
 
